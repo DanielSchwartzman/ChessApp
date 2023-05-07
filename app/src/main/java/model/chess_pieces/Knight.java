@@ -23,14 +23,12 @@ public class Knight extends ChessPiece
         if(allegiance==0)
         {
             image= R.drawable.knight_white;
-            imageTargeted= R.drawable.knight_white_targeted;
-            imageCheck=R.drawable.knight_white_check;
+            imageTargeted= R.drawable.knight_white_selected;
         }
         else
         {
             image= R.drawable.knight_black;
-            imageTargeted= R.drawable.knight_black_targeted;
-            imageCheck=R.drawable.knight_black_check;
+            imageTargeted= R.drawable.knight_black_selected;
         }
     }
 

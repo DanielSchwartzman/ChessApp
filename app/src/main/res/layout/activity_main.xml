@@ -44,4 +44,15 @@
         app:layout_constraintTop_toBottomOf="@+id/activateSinglePlayer"
         tools:ignore="HardcodedText" />
 
+    <Button
+        android:id="@+id/activateInternetPlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="Internet play"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activateTwoPlayers"
+        tools:ignore="HardcodedText" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

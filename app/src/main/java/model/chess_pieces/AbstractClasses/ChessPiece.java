@@ -17,7 +17,6 @@ public abstract class ChessPiece
     protected int allegiance;
     protected int image;
     protected int imageTargeted;
-    protected int imageCheck;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,6 @@ public abstract class ChessPiece
 
     public int getImage() {return image;}
     public int getImageTargeted() {return imageTargeted;}
-    public int getImageCheck() {return imageCheck;}
 
     public ArrayList<Coordinate> getThreatening(){ return threatening;}
     public Coordinate getLocation(){return location;}

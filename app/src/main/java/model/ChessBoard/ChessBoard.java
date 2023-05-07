@@ -1,6 +1,5 @@
 package model.ChessBoard;
 
-import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -105,12 +104,13 @@ public class ChessBoard
         movePiece(fromRow,fromCol,toRow,toCol,moveType);
         checkForPromotion(toRow,toCol);
         calculateMovesForEachPiece();
-        checkVictory(chessBoard[toRow][toCol]);
+        checkVictory();
         switchCurrentPlayer();
         controller.askControllerToDisplayChessBoard();
 
         if(initiator.equals("Player")&&(enemy!=null))
         {
+            controller.askControllerToDisableClicks();
             enemy.askBotToMakeMove(chessBoard);
         }
     }
@@ -247,19 +247,28 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Check Victory methods, allegiance: 0=white 1:black
 
-    private void checkVictory(ChessPiece threatening)
+    private void checkVictory()
     {
-        int row;
-        int col;
-
-        for (int i = 0; i < threatening.getThreatening().size() ; i++)
+        for (int i = 0; i < 8; i++)
         {
-            row=threatening.getThreatening().get(i).getRow();
-            col=threatening.getThreatening().get(i).getCol();
-            if(chessBoard[row][col] instanceof King)
+            for (int j = 0; j < 8; j++)
             {
-                controller.askControllerToDisplayCheck(threatening.getLocation().getRow(),threatening.getLocation().getCol(),row,col);
-                Check(chessBoard[row][col],threatening);
+                if(chessBoard[i][j]!=null)
+                {
+                    int row;
+                    int col;
+
+                    for (int k = 0; k < chessBoard[i][j].getThreatening().size() ; k++)
+                    {
+                        row=chessBoard[i][j].getThreatening().get(k).getRow();
+                        col=chessBoard[i][j].getThreatening().get(k).getCol();
+                        if(chessBoard[row][col] instanceof King)
+                        {
+                            controller.askControllerToDisplayCheck(row,col);
+                            Check(chessBoard[row][col],chessBoard[i][j]);
+                        }
+                    }
+                }
             }
         }
     }
@@ -650,67 +659,6 @@ public class ChessBoard
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //toString method
-
-    @NonNull
-    public String toString()
-    {
-        StringBuilder sbChessBoard=new StringBuilder();
-        StringBuilder sbPieces=new StringBuilder();
-        for (int i = 0; i < 8; i++)
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                if(chessBoard[i][j]!=null)
-                {
-                    if(chessBoard[i][j] instanceof Rook)
-                    {
-                        sbChessBoard.append("4 ");
-                    }
-                    else if(chessBoard[i][j] instanceof King)
-                    {
-                        sbChessBoard.append("1 ");
-                    }
-                    else if(chessBoard[i][j] instanceof Bishop)
-                    {
-                        sbChessBoard.append("3 ");
-                    }
-                    else if(chessBoard[i][j] instanceof Knight)
-                    {
-                        sbChessBoard.append("5 ");
-                    }
-                    else if(chessBoard[i][j] instanceof Queen)
-                    {
-                        sbChessBoard.append("2 ");
-                    }
-                    else if(chessBoard[i][j] instanceof Pawn)
-                    {
-                        sbChessBoard.append("6 ");
-                    }
-                    sbPieces.append(chessBoard[i][j].toString());
-                }
-                else
-                {
-                    sbChessBoard.append("0 ");
-                }
-            }
-            sbChessBoard.append("\n");
-        }
-        sbChessBoard.append("\n");
-
-        sbChessBoard.append(sbPieces);
-        sbChessBoard.append("\n\n\n");
-        return sbChessBoard.toString();
-    }
-
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
     //Controller to Model methods
 
     public boolean askModelIfNotNull(int row, int col)
@@ -730,7 +678,7 @@ public class ChessBoard
         }
     }
 
-    public int askModelForTargetedImage(int row, int col)
+    public int askModelForSelectedImage(int row, int col)
     {
         if(chessBoard[row][col]!=null)
         {
@@ -744,9 +692,9 @@ public class ChessBoard
 
     public int askModelForCheckImage(int row,int col)
     {
-        if(chessBoard[row][col]!=null)
+        if((chessBoard[row][col]!=null)&&(chessBoard[row][col] instanceof King))
         {
-            return chessBoard[row][col].getImageCheck();
+            return ((King)chessBoard[row][col]).getImageCheck();
         }
         else
         {

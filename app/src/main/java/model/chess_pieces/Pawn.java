@@ -38,14 +38,12 @@ public class Pawn extends SpecialChessPiece
         if(allegiance==0)
         {
             image= R.drawable.pawn_white;
-            imageTargeted= R.drawable.pawn_white_targeted;
-            imageCheck=R.drawable.pawn_white_check;
+            imageTargeted= R.drawable.pawn_white_selected;
         }
         else
         {
             image= R.drawable.pawn_black;
-            imageTargeted= R.drawable.pawn_black_targeted;
-            imageCheck=R.drawable.pawn_black_check;
+            imageTargeted= R.drawable.pawn_black_selected;
         }
     }
 

@@ -21,7 +21,7 @@ public class ChessBoardActivity extends AppCompatActivity
 
     ImageView[][] imageViews;
     Controller controller;
-    Coordinate[] check;
+    Coordinate check;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ public class ChessBoardActivity extends AppCompatActivity
                 imageViews[i][j].setOnClickListener(view->{});
             }
         }
-        int image=controller.askControllerForTargetedImage(fromRow,fromCol);
+        int image=controller.askControllerForSelectedImage(fromRow,fromCol);
         if(image!=0)
         {
             imageViews[fromRow][fromCol].setBackgroundResource(image);
@@ -138,12 +138,8 @@ public class ChessBoardActivity extends AppCompatActivity
             {
                 int toRow = movement.get(i).getRow();
                 int toCol = movement.get(i).getCol();
-                int image=controller.askControllerForTargetedImage(toRow,toCol);
-                if(image!=0)
-                {
-                    imageViews[toRow][toCol].setBackgroundResource(image);
-                }
-                else
+                int image=controller.askControllerForSelectedImage(toRow,toCol);
+                if(image==0)
                 {
                     imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                 }
@@ -160,12 +156,8 @@ public class ChessBoardActivity extends AppCompatActivity
             {
                 int toRow=((Pawn)pawn).getEnPassant().get(i).getRow();
                 int toCol=((Pawn)pawn).getEnPassant().get(i).getCol();
-                int image=controller.askControllerForTargetedImage(toRow,toCol);
-                if(image!=0)
-                {
-                    imageViews[toRow][toCol].setBackgroundResource(image);
-                }
-                else
+                int image=controller.askControllerForSelectedImage(toRow,toCol);
+                if(image==0)
                 {
                     imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                 }
@@ -184,10 +176,9 @@ public class ChessBoardActivity extends AppCompatActivity
                 int toCol=pawn.getThreatening().get(i).getCol();
                 if(controller.askControllerIfNotNull(toRow,toCol))
                 {
-                    int image = controller.askControllerForTargetedImage(toRow, toCol);
-                    if (image != 0) {
-                        imageViews[toRow][toCol].setBackgroundResource(image);
-                    } else {
+                    int image = controller.askControllerForSelectedImage(toRow, toCol);
+                    if (image == 0)
+                    {
                         imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                     }
                     imageViews[toRow][toCol].setOnClickListener(view ->
@@ -206,12 +197,8 @@ public class ChessBoardActivity extends AppCompatActivity
         {
             int toRow=piece.getThreatening().get(i).getRow();
             int toCol=piece.getThreatening().get(i).getCol();
-            int image=controller.askControllerForTargetedImage(toRow,toCol);
-            if(image!=0)
-            {
-                imageViews[toRow][toCol].setBackgroundResource(image);
-            }
-            else
+            int image=controller.askControllerForSelectedImage(toRow,toCol);
+            if(image==0)
             {
                 imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
             }
@@ -241,12 +228,8 @@ public class ChessBoardActivity extends AppCompatActivity
         {
             int toRow=piece.getThreatening().get(i).getRow();
             int toCol=piece.getThreatening().get(i).getCol();
-            int image=controller.askControllerForTargetedImage(toRow,toCol);
-            if(image!=0)
-            {
-                imageViews[toRow][toCol].setBackgroundResource(image);
-            }
-            else
+            int image=controller.askControllerForSelectedImage(toRow,toCol);
+            if(image==0)
             {
                 imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
             }
@@ -406,10 +389,8 @@ public class ChessBoardActivity extends AppCompatActivity
         }
         if(check!=null)
         {
-            imageViews[check[0].getRow()][check[0].getCol()].setBackgroundResource(
-                    controller.askControllerForCheckImage(check[0].getRow(),check[0].getCol()));
-            imageViews[check[1].getRow()][check[1].getCol()].setBackgroundResource(
-                    controller.askControllerForCheckImage(check[1].getRow(),check[1].getCol()));
+            imageViews[check.getRow()][check.getCol()].setBackgroundResource(
+                    controller.askControllerForCheckImage(check.getRow(),check.getCol()));
         }
     }
 
@@ -422,19 +403,19 @@ public class ChessBoardActivity extends AppCompatActivity
                 imageViews[i][j].setOnClickListener(view->{});
             }
         }
-        if(allegiance==0){
+        if(allegiance==0)
+        {
             Toast.makeText(getApplicationContext(),"Victory for Whites",Toast.LENGTH_SHORT).show();
         }
-        else{
+        else
+        {
             Toast.makeText(getApplicationContext(),"Victory for Blacks",Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void askViewToDisplayCheck(int fromRow,int fromCol,int toRow, int toCol)
+    public void askViewToDisplayCheck(int kingRow,int KingCol)
     {
-        check=new Coordinate[2];
-        check[0]=new Coordinate(fromRow,fromCol);
-        check[1]=new Coordinate(toRow,toCol);
+        check=new Coordinate(kingRow,KingCol);
     }
 
     public void askViewToRemoveCheck()
@@ -445,6 +426,17 @@ public class ChessBoardActivity extends AppCompatActivity
     public String askViewForPromotion()
     {
         return "queen";
+    }
+
+    public void askViewToDisableClicks()
+    {
+        for (int i = 0; i < 8 ; i++)
+        {
+            for (int j = 0; j < 8 ; j++)
+            {
+                imageViews[i][j].setOnClickListener(view->{});
+            }
+        }
     }
 
     //////////////////////////////////////////////////

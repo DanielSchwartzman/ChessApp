@@ -23,14 +23,12 @@ public class Queen extends ChessPiece
         if(allegiance==0)
         {
             image= R.drawable.queen_white;
-            imageTargeted= R.drawable.queen_white_targeted;
-            imageCheck=R.drawable.queen_white_check;
+            imageTargeted= R.drawable.queen_white_selected;
         }
         else
         {
             image= R.drawable.queen_black;
-            imageTargeted= R.drawable.queen_black_targeted;
-            imageCheck=R.drawable.queen_black_check;
+            imageTargeted= R.drawable.queen_black_selected;
         }
     }
 

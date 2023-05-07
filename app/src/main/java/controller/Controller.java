@@ -56,9 +56,9 @@ public class Controller
         return model.askModelForImage(row,col);
     }
 
-    public int askControllerForTargetedImage(int row, int col)
+    public int askControllerForSelectedImage(int row, int col)
     {
-        return model.askModelForTargetedImage(row,col);
+        return model.askModelForSelectedImage(row,col);
     }
 
     public int askControllerForCheckImage(int row, int col)
@@ -96,9 +96,9 @@ public class Controller
         view.askViewToDisplayChessBoard();
     }
 
-    public void askControllerToDisplayCheck(int fromRow, int fromCol, int toRow, int toCol)
+    public void askControllerToDisplayCheck(int kingRow,int kingCol)
     {
-        view.askViewToDisplayCheck(fromRow,fromCol,toRow,toCol);
+        view.askViewToDisplayCheck(kingRow,kingCol);
     }
 
     public void askControllerToRemoveCheck()
@@ -110,6 +110,8 @@ public class Controller
     {
         return view.askViewForPromotion();
     }
+
+    public void askControllerToDisableClicks(){view.askViewToDisableClicks();}
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////

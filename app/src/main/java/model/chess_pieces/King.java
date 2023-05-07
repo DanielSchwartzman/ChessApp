@@ -14,7 +14,8 @@ public class King extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Variables
 
-    protected ArrayList<Coordinate> castling;
+    private ArrayList<Coordinate> castling;
+    private int imageCheck;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,13 +38,13 @@ public class King extends SpecialChessPiece
         if(allegiance==0)
         {
             image= R.drawable.king_white;
-            imageTargeted= R.drawable.king_white_targeted;
+            imageTargeted= R.drawable.king_white_selected;
             imageCheck=R.drawable.king_white_check;
         }
         else
         {
             image= R.drawable.king_black;
-            imageTargeted= R.drawable.king_black_targeted;
+            imageTargeted= R.drawable.king_black_selected;
             imageCheck=R.drawable.king_black_check;
         }
     }
@@ -314,6 +315,7 @@ public class King extends SpecialChessPiece
     {
         return castling;
     }
+    public int getImageCheck() {return imageCheck;}
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////

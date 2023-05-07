@@ -23,14 +23,12 @@ public class Bishop extends ChessPiece
         if(allegiance==0)
         {
             image= R.drawable.bishop_white;
-            imageTargeted= R.drawable.bishop_white_targeted;
-            imageCheck=R.drawable.bishop_white_check;
+            imageTargeted= R.drawable.bishop_white_selected;
         }
         else
         {
             image= R.drawable.bishop_black;
-            imageTargeted= R.drawable.bishop_black_targeted;
-            imageCheck=R.drawable.bishop_black_check;
+            imageTargeted= R.drawable.bishop_black_selected;
         }
     }
 

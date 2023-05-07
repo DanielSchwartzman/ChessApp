@@ -25,14 +25,12 @@ public class Rook extends SpecialChessPiece
         if(allegiance==0)
         {
             image= R.drawable.rook_white;
-            imageTargeted= R.drawable.rook_white_targeted;
-            imageCheck=R.drawable.rook_white_check;
+            imageTargeted= R.drawable.rook_white_selected;
         }
         else
         {
             image= R.drawable.rook_black;
-            imageTargeted= R.drawable.rook_black_targeted;
-            imageCheck=R.drawable.rook_black_check;
+            imageTargeted= R.drawable.rook_black_selected;
         }
     }
 
