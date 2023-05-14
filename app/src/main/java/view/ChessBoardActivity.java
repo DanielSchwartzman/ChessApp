@@ -3,8 +3,11 @@ package view;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.example.chessapp.R;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import controller.Controller;
 import model.Coordinate.Coordinate;
@@ -20,8 +23,12 @@ public class ChessBoardActivity extends AppCompatActivity
     //Variables
 
     ImageView[][] imageViews;
+    TextView gameNumberText;
     Controller controller;
-    Coordinate check;
+    DatabaseReference myRef;
+    String gameMode;
+    String host;
+    String gameNumber;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,18 +41,43 @@ public class ChessBoardActivity extends AppCompatActivity
     //Constructor
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
 
+        initializeStrings();
         initializeViewNodes();
 
-        String gameMode = getIntent().getStringExtra("GameMode");
-
-        controller = new Controller(gameMode, this);
+        controller = new Controller(gameMode,gameNumber,host, this);
         askViewToDisplayChessBoard();
 
-        playerMove();
+        if(gameMode.equals("TwoPlayers"))
+        {
+            playerMove();
+        }
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        if(myRef!=null && host.equals("0"))
+        {
+            myRef.removeValue();
+            DatabaseReference myRef=FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
+            myRef.removeValue();
+        }
+    }
+
+    private void initializeStrings()
+    {
+        gameMode = getIntent().getStringExtra("GameMode");
+        gameNumber = getIntent().getStringExtra("GameNumber");
+        host = getIntent().getStringExtra("Host");
+        if(gameNumber!=null)
+            myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+
     }
 
     //////////////////////////////////////////////////
@@ -58,15 +90,15 @@ public class ChessBoardActivity extends AppCompatActivity
     //////////////////////////////////////////////////
     //Two players game mode
 
-    private void playerMove()
+    public void playerMove()
     {
         for (int i = 0; i < 8 ; i++) {
             for (int j = 0; j < 8 ; j++) {
                 int row=i;
                 int col=j;
-                if(controller.askControllerIfNotNull(row,col))
+                if(controller.checkIfPieceExists(row,col))
                 {
-                    if(controller.askControllerIfPieceAllowedToMove(row,col))
+                    if(controller.checkIfPieceAllowedToMove(row,col))
                     {
                         imageViews[row][col].setOnClickListener(view ->
                                 chooseWhereToMove(row,col));
@@ -93,7 +125,7 @@ public class ChessBoardActivity extends AppCompatActivity
                 imageViews[i][j].setOnClickListener(view->{});
             }
         }
-        int image=controller.askControllerForSelectedImage(fromRow,fromCol);
+        int image=controller.getPieceSelectedImage(fromRow,fromCol);
         if(image!=0)
         {
             imageViews[fromRow][fromCol].setBackgroundResource(image);
@@ -103,7 +135,7 @@ public class ChessBoardActivity extends AppCompatActivity
             playerMove();
             askViewToDisplayChessBoard();
         });
-        ChessPiece piece=controller.askControllerForChessPiece(fromRow,fromCol);
+        ChessPiece piece=controller.getChessPiece(fromRow,fromCol);
         if(piece instanceof Pawn)
         {
             highlightTargetedForPawn(fromRow,fromCol,piece);
@@ -138,15 +170,15 @@ public class ChessBoardActivity extends AppCompatActivity
             {
                 int toRow = movement.get(i).getRow();
                 int toCol = movement.get(i).getCol();
-                int image=controller.askControllerForSelectedImage(toRow,toCol);
+                int image=controller.getPieceSelectedImage(toRow,toCol);
                 if(image==0)
                 {
                     imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                 }
                 imageViews[toRow][toCol].setOnClickListener(view ->
                 {
-                    controller.askControllerToMakeTurn(fromRow, fromCol, toRow, toCol,"regularMove","Player");
-                    playerMove();
+                    disableClicks();
+                    controller.askControllerToMakeTurn(fromRow, fromCol, toRow, toCol,"regularMove");
                 });
             }
         }
@@ -156,15 +188,15 @@ public class ChessBoardActivity extends AppCompatActivity
             {
                 int toRow=((Pawn)pawn).getEnPassant().get(i).getRow();
                 int toCol=((Pawn)pawn).getEnPassant().get(i).getCol();
-                int image=controller.askControllerForSelectedImage(toRow,toCol);
+                int image=controller.getPieceSelectedImage(toRow,toCol);
                 if(image==0)
                 {
                     imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                 }
                 imageViews[toRow][toCol].setOnClickListener(view ->
                 {
-                    controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"enPassant","Player");
-                    playerMove();
+                    disableClicks();
+                    controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"enPassant");
                 });
             }
         }
@@ -174,17 +206,17 @@ public class ChessBoardActivity extends AppCompatActivity
             {
                 int toRow=pawn.getThreatening().get(i).getRow();
                 int toCol=pawn.getThreatening().get(i).getCol();
-                if(controller.askControllerIfNotNull(toRow,toCol))
+                if(controller.checkIfPieceExists(toRow,toCol))
                 {
-                    int image = controller.askControllerForSelectedImage(toRow, toCol);
+                    int image = controller.getPieceSelectedImage(toRow, toCol);
                     if (image == 0)
                     {
                         imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
                     }
                     imageViews[toRow][toCol].setOnClickListener(view ->
                     {
-                        controller.askControllerToMakeTurn(fromRow, fromCol, toRow, toCol, "regularMove","Player");
-                        playerMove();
+                        disableClicks();
+                        controller.askControllerToMakeTurn(fromRow, fromCol, toRow, toCol, "regularMove");
                     });
                 }
             }
@@ -197,15 +229,15 @@ public class ChessBoardActivity extends AppCompatActivity
         {
             int toRow=piece.getThreatening().get(i).getRow();
             int toCol=piece.getThreatening().get(i).getCol();
-            int image=controller.askControllerForSelectedImage(toRow,toCol);
+            int image=controller.getPieceSelectedImage(toRow,toCol);
             if(image==0)
             {
                 imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
             }
             imageViews[toRow][toCol].setOnClickListener(view ->
             {
-                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove","Player");
-                playerMove();
+                disableClicks();
+                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove");
             });
         }
     }
@@ -220,23 +252,23 @@ public class ChessBoardActivity extends AppCompatActivity
             imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
             imageViews[toRow][toCol].setOnClickListener(view ->
             {
-                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"castling","Player");
-                playerMove();
+                disableClicks();
+                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"castling");
             });
         }
         for (int i = 0; i < piece.getThreatening().size(); i++)
         {
             int toRow=piece.getThreatening().get(i).getRow();
             int toCol=piece.getThreatening().get(i).getCol();
-            int image=controller.askControllerForSelectedImage(toRow,toCol);
+            int image=controller.getPieceSelectedImage(toRow,toCol);
             if(image==0)
             {
                 imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
             }
             imageViews[toRow][toCol].setOnClickListener(view ->
             {
-                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove","Player");
-                playerMove();
+                disableClicks();
+                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove");
             });
         }
     }
@@ -245,6 +277,25 @@ public class ChessBoardActivity extends AppCompatActivity
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Disable clicks
+
+    private void disableClicks()
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                imageViews[i][j].setOnClickListener(view->{});
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -262,6 +313,13 @@ public class ChessBoardActivity extends AppCompatActivity
         initializeRow5(imageViews);
         initializeRow6(imageViews);
         initializeRow7(imageViews);
+
+        if(gameNumber!=null)
+        {
+            gameNumberText=findViewById(R.id.chessBoardGameNumber);
+            gameNumberText.setText(gameNumber);
+        }
+
     }
 
     private void initializeRow0(ImageView[][] imageViews)
@@ -376,7 +434,7 @@ public class ChessBoardActivity extends AppCompatActivity
         {
             for (int j = 0; j < 8 ; j++)
             {
-                int image=controller.askControllerForImage(i,j);
+                int image=controller.getPieceImage(i,j);
                 if(image!=0)
                 {
                     imageViews[i][j].setBackgroundResource(image);
@@ -387,10 +445,11 @@ public class ChessBoardActivity extends AppCompatActivity
                 }
             }
         }
-        if(check!=null)
+        int[] checkArray=controller.getCheckArray();
+        if(checkArray[0]!=-1 && checkArray[1]!=-1)
         {
-            imageViews[check.getRow()][check.getCol()].setBackgroundResource(
-                    controller.askControllerForCheckImage(check.getRow(),check.getCol()));
+            int image=controller.getKingCheckedImage(checkArray[0],checkArray[1]);
+            imageViews[checkArray[0]][checkArray[1]].setBackgroundResource(image);
         }
     }
 
@@ -410,32 +469,6 @@ public class ChessBoardActivity extends AppCompatActivity
         else
         {
             Toast.makeText(getApplicationContext(),"Victory for Blacks",Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void askViewToDisplayCheck(int kingRow,int KingCol)
-    {
-        check=new Coordinate(kingRow,KingCol);
-    }
-
-    public void askViewToRemoveCheck()
-    {
-        check=null;
-    }
-
-    public String askViewForPromotion()
-    {
-        return "queen";
-    }
-
-    public void askViewToDisableClicks()
-    {
-        for (int i = 0; i < 8 ; i++)
-        {
-            for (int j = 0; j < 8 ; j++)
-            {
-                imageViews[i][j].setOnClickListener(view->{});
-            }
         }
     }
 

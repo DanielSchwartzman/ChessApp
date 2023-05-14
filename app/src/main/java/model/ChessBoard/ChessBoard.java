@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Objects;
-import controller.Controller;
 import model.Coordinate.Coordinate;
-import model.Bot.Bot;
 import model.chess_pieces.AbstractClasses.ChessPiece;
 import model.chess_pieces.AbstractClasses.SpecialChessPiece;
 import model.chess_pieces.Bishop;
@@ -15,22 +13,19 @@ import model.chess_pieces.Knight;
 import model.chess_pieces.Pawn;
 import model.chess_pieces.Queen;
 import model.chess_pieces.Rook;
-
 public class ChessBoard
 {
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //Variables, allegiance: 0=white 1:black
 
-    Controller controller;
     ChessPiece[][] chessBoard;
     int turn;
     boolean check;
-
-
     Coordinate[] lastMove;
+    int[] checkedKingLocation;
 
-    Bot enemy;
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,13 +36,13 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Constructor, allegiance: 0=white 1:black
 
-    public ChessBoard(Controller controller,String gameMode)
+    public ChessBoard()
     {
-        initializeBot(gameMode);
         turn = 0;
         check=true;
-        this.controller = controller;
         chessBoard = new ChessPiece[8][8];
+
+        initializeCheckedKing();
 
         lastMove=new Coordinate[2];
         lastMove[0]=new Coordinate(-1,-1);
@@ -67,21 +62,11 @@ public class ChessBoard
         initializeQueens();
     }
 
-    private void initializeBot(String gameMode)
+    private void initializeCheckedKing()
     {
-        switch (gameMode)
-        {
-            case "TwoPlayers":
-            {
-                enemy=null;
-                break;
-            }
-            case "SinglePlayer":
-            {
-                enemy=new Bot(this);
-                break;
-            }
-        }
+        checkedKingLocation=new int[2];
+        checkedKingLocation[0]=-1;
+        checkedKingLocation[1]=-1;
     }
 
     //////////////////////////////////////////////////
@@ -94,25 +79,23 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Make a move methods, allegiance: 0=white 1:black
 
-    public void askModelToMakeTurn(int fromRow, int fromCol, int toRow, int toCol,String moveType,String initiator)
+    public String askModelToMakeTurn(int fromRow, int fromCol, int toRow, int toCol,String moveType,int type)
     {
+        if(chessBoard[fromRow][fromCol]==null)
+        {
+            return "passed";
+        }
+        String result;
         lastMove[0].setLocation(fromRow,fromCol);
         lastMove[1].setLocation(toRow,toCol);
-
-        controller.askControllerToRemoveCheck();
-
+        initializeCheckedKing();
         movePiece(fromRow,fromCol,toRow,toCol,moveType);
         checkForPromotion(toRow,toCol);
         calculateMovesForEachPiece();
-        checkVictory();
-        switchCurrentPlayer();
-        controller.askControllerToDisplayChessBoard();
-
-        if(initiator.equals("Player")&&(enemy!=null))
-        {
-            controller.askControllerToDisableClicks();
-            enemy.askBotToMakeMove(chessBoard);
-        }
+        result=checkVictory();
+        if(type!=1)
+            switchCurrentPlayer();
+        return result;
     }
 
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol,String moveType)
@@ -193,35 +176,8 @@ public class ChessBoard
     {
         if((((chessBoard[row][col].getAllegiance()==0)&&(row==0))||((chessBoard[row][col].getAllegiance()==1)&&(row==7)))&&(chessBoard[row][col] instanceof Pawn))
         {
-            String promoteTo=controller.askControllerForPromotion();
-            switch (promoteTo)
-            {
-                case "queen":
-                {
-                    Queen q=new Queen(row,col,chessBoard[row][col].getAllegiance());
-                    chessBoard[row][col]=q;
-                    break;
-                }
-                case "knight":
-                {
-                    Knight k=new Knight(row,col,chessBoard[row][col].getAllegiance());
-                    chessBoard[row][col]=k;
-                    break;
-                }
-                case "rook":
-                {
-                    Rook r=new Rook(row,col,chessBoard[row][col].getAllegiance());
-                    r.increaseTimesMoved();
-                    chessBoard[row][col]=r;
-                    break;
-                }
-                case "bishop":
-                {
-                    Bishop b=new Bishop(row,col,chessBoard[row][col].getAllegiance());
-                    chessBoard[row][col]=b;
-                    break;
-                }
-            }
+            Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
+            chessBoard[row][col] = q;
         }
     }
 
@@ -247,7 +203,7 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Check Victory methods, allegiance: 0=white 1:black
 
-    private void checkVictory()
+    private String checkVictory()
     {
         for (int i = 0; i < 8; i++)
         {
@@ -264,16 +220,18 @@ public class ChessBoard
                         col=chessBoard[i][j].getThreatening().get(k).getCol();
                         if(chessBoard[row][col] instanceof King)
                         {
-                            controller.askControllerToDisplayCheck(row,col);
-                            Check(chessBoard[row][col],chessBoard[i][j]);
+                            checkedKingLocation[0]=row;
+                            checkedKingLocation[1]=col;
+                            return Check(chessBoard[row][col],chessBoard[i][j]);
                         }
                     }
                 }
             }
         }
+        return "passed";
     }
 
-    private void Check(ChessPiece king, ChessPiece attacker)
+    private String Check(ChessPiece king, ChessPiece attacker)
     {
         ArrayList<ChessPiece> piecesThatCanKill= AllWhoThreatenCoordinate(attacker.getLocation(), attacker.getAllegiance());
         Hashtable<Coordinate, ArrayList<ChessPiece> > piecesThatCanBlock=allWhoCanBlockThreatening(king,attacker);
@@ -289,8 +247,9 @@ public class ChessBoard
         }
         else
         {
-            controller.askControllerToDisplayVictory(turn);
+            return "victory";
         }
+        return "check";
     }
 
     //////////////////////////////////////////////////
@@ -710,6 +669,28 @@ public class ChessBoard
     public ChessPiece askModelForChessPiece(int row, int col)
     {
         return chessBoard[row][col];
+    }
+
+    public int getVictoryTurn()
+    {
+        if(turn==1)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    public int[] getCheckedKingLocation()
+    {
+        return checkedKingLocation;
+    }
+
+    public int getTurn()
+    {
+        return turn;
     }
 
     //////////////////////////////////////////////////

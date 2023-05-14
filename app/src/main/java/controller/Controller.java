@@ -1,18 +1,28 @@
 package controller;
 
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import model.chess_pieces.AbstractClasses.ChessPiece;
 import view.ChessBoardActivity;
 import model.ChessBoard.ChessBoard;
 
 public class Controller
 {
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //Variables
 
     ChessBoard model;
-    String gameMode;
     ChessBoardActivity view;
+    String gameMode;
+    String host;
+    String gameNumber;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,11 +34,25 @@ public class Controller
     //////////////////////////////////////////////////
     //Constructor
 
-    public Controller(String gameMode, ChessBoardActivity view)
+    public Controller(String gameMode,String gameNumber,String host,ChessBoardActivity view)
     {
-        model=new ChessBoard(this,gameMode);
         this.gameMode=gameMode;
         this.view=view;
+        model=new ChessBoard();
+        if(gameMode.equals("InternetPlay"))
+        {
+            this.host=host;
+            this.gameNumber=gameNumber;
+            if(host.equals("0"))
+            {
+                internetPlayHost();
+                checkForConnection();
+            }
+            else
+            {
+                internetPlayClient();
+            }
+        }
     }
 
     //////////////////////////////////////////////////
@@ -39,79 +63,113 @@ public class Controller
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Controller to Model methods
+    //Initial connection methods
 
-    public void askControllerToMakeTurn(int fromRow,int fromCol,int toRow,int toCol,String moveType,String initiator)
+    private void internetPlayHost()
     {
-        model.askModelToMakeTurn(fromRow,fromCol,toRow,toCol,moveType,initiator);
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+        myRef.setValue("Active");
     }
 
-    public boolean askControllerIfNotNull(int row, int col)
+    private void internetPlayClient()
+    {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+        myRef.setValue("Connected");
+    }
+
+    private void checkForConnection()
+    {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+        myRef.addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                String value = dataSnapshot.getValue(String.class);
+                if(value!=null) {
+                    if (value.equals("Connected"))
+                    {
+                        view.playerMove();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Make turn methods
+
+    public void askControllerToMakeTurn(int fromRow,int fromCol,int toRow,int toCol,String moveType)
+    {
+        String result=model.askModelToMakeTurn(fromRow,fromCol,toRow,toCol,moveType,0);
+        if(gameMode.equals("TwoPlayers"))
+        {
+            if (result.equals("victory"))
+            {
+                view.askViewToDisplayVictory(model.getVictoryTurn());
+            }
+            else
+            {
+                view.askViewToDisplayChessBoard();
+                view.playerMove();
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //View to controller methods
+
+    public boolean checkIfPieceExists(int row, int col)
     {
         return model.askModelIfNotNull(row,col);
     }
 
-    public int askControllerForImage(int row,int col)
+    public int getPieceImage(int row, int col)
     {
         return model.askModelForImage(row,col);
     }
 
-    public int askControllerForSelectedImage(int row, int col)
+    public int getPieceSelectedImage(int row, int col)
     {
         return model.askModelForSelectedImage(row,col);
     }
 
-    public int askControllerForCheckImage(int row, int col)
+    public int getKingCheckedImage(int row, int col)
     {
         return model.askModelForCheckImage(row,col);
     }
 
-    public boolean askControllerIfPieceAllowedToMove(int row, int col)
+    public boolean checkIfPieceAllowedToMove(int row, int col)
     {
         return model.askModelIfPieceAllowedToMove(row,col);
     }
 
-    public ChessPiece askControllerForChessPiece(int row, int col)
+    public ChessPiece getChessPiece(int row, int col)
     {
         return model.askModelForChessPiece(row,col);
     }
 
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
-    //Controller to View methods
-
-    public void askControllerToDisplayVictory(int allegiance)
+    public int[] getCheckArray()
     {
-        view.askViewToDisplayVictory(allegiance);
+        return model.getCheckedKingLocation();
     }
-
-    public void askControllerToDisplayChessBoard()
-    {
-        view.askViewToDisplayChessBoard();
-    }
-
-    public void askControllerToDisplayCheck(int kingRow,int kingCol)
-    {
-        view.askViewToDisplayCheck(kingRow,kingCol);
-    }
-
-    public void askControllerToRemoveCheck()
-    {
-        view.askViewToRemoveCheck();
-    }
-
-    public String askControllerForPromotion()
-    {
-        return view.askViewForPromotion();
-    }
-
-    public void askControllerToDisableClicks(){view.askViewToDisableClicks();}
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
