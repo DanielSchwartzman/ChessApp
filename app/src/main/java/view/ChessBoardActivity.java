@@ -1,13 +1,18 @@
 package view;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.chessapp.R;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import controller.Controller;
 import model.Coordinate.Coordinate;
@@ -25,10 +30,13 @@ public class ChessBoardActivity extends AppCompatActivity
     ImageView[][] imageViews;
     TextView gameNumberText;
     Controller controller;
-    DatabaseReference myRef;
     String gameMode;
     String host;
     String gameNumber;
+
+    DatabaseReference gameNumberRef;
+    DatabaseReference roomInfoRef;
+
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,17 +64,28 @@ public class ChessBoardActivity extends AppCompatActivity
         {
             playerMove();
         }
+        else if(gameMode.equals("InternetPlay"))
+        {
+            if(host.equals("0"))
+            {
+                internetPlayHost();
+            }
+            else
+            {
+                internetPlayClient();
+            }
+            listenForRoomChanges();
+        }
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
-        if(myRef!=null && host.equals("0"))
+        if((gameNumberRef!=null)&&(roomInfoRef!=null))
         {
-            myRef.removeValue();
-            DatabaseReference myRef=FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
-            myRef.removeValue();
+            gameNumberRef.removeValue();
+            roomInfoRef.removeValue();
         }
     }
 
@@ -76,8 +95,58 @@ public class ChessBoardActivity extends AppCompatActivity
         gameNumber = getIntent().getStringExtra("GameNumber");
         host = getIntent().getStringExtra("Host");
         if(gameNumber!=null)
-            myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+        {
+            gameNumberRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+            roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
+        }
+    }
 
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Connection methods
+
+    private void internetPlayHost()
+    {
+        gameNumberRef.setValue("OnePlayer");
+    }
+
+    private void internetPlayClient()
+    {
+        gameNumberRef.setValue("TwoPlayers");
+        Toast.makeText(getApplicationContext(), "Connected to game", Toast.LENGTH_SHORT).show();
+    }
+
+    private void listenForRoomChanges()
+    {
+        gameNumberRef.addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                String value = dataSnapshot.getValue(String.class);
+                if(value==null)
+                {
+                    Toast.makeText(getApplicationContext(), "Game closed", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                else
+                {
+                    if (value.equals("TwoPlayers")&&host.equals("0"))
+                    {
+                        Toast.makeText(getApplicationContext(), "Opponent connected", Toast.LENGTH_SHORT).show();
+                        playerMove();
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 
     //////////////////////////////////////////////////
@@ -92,8 +161,10 @@ public class ChessBoardActivity extends AppCompatActivity
 
     public void playerMove()
     {
-        for (int i = 0; i < 8 ; i++) {
-            for (int j = 0; j < 8 ; j++) {
+        for (int i = 0; i < 8 ; i++)
+        {
+            for (int j = 0; j < 8 ; j++)
+            {
                 int row=i;
                 int col=j;
                 if(controller.checkIfPieceExists(row,col))

@@ -79,7 +79,7 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Make a move methods, allegiance: 0=white 1:black
 
-    public String askModelToMakeTurn(int fromRow, int fromCol, int toRow, int toCol,String moveType,int type)
+    public String askModelToMakeTurn(int fromRow, int fromCol, int toRow, int toCol,String moveType)
     {
         if(chessBoard[fromRow][fromCol]==null)
         {
@@ -93,8 +93,7 @@ public class ChessBoard
         checkForPromotion(toRow,toCol);
         calculateMovesForEachPiece();
         result=checkVictory();
-        if(type!=1)
-            switchCurrentPlayer();
+        switchCurrentPlayer();
         return result;
     }
 

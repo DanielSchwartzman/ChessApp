@@ -95,8 +95,6 @@ public class InternetPlayActivity extends AppCompatActivity
         joinGame.setOnClickListener(view ->
         {
             DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumberInput.getText().toString());
-
-            // Read from the database
             myRef.addListenerForSingleValueEvent(new ValueEventListener()
             {
                 @Override
@@ -105,16 +103,22 @@ public class InternetPlayActivity extends AppCompatActivity
                     String value = snapshot.getValue(String.class);
                     if(value!=null)
                     {
-                        Intent joinGame = new Intent(getApplicationContext(), ChessBoardActivity.class);
-                        joinGame.putExtra("GameMode", "InternetPlay");
-                        joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
-                        joinGame.putExtra("Host", "1");
-                        startActivity(joinGame);
+                        if(value.equals("OnePlayer"))
+                        {
+                            Intent joinGame = new Intent(getApplicationContext(), ChessBoardActivity.class);
+                            joinGame.putExtra("GameMode", "InternetPlay");
+                            joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
+                            joinGame.putExtra("Host", "1");
+                            startActivity(joinGame);
+                        }
+                        else if(value.equals("TwoPlayers"))
+                        {
+                            Toast.makeText(getApplicationContext(),"Game room is full",Toast.LENGTH_SHORT).show();
+                        }
                     }
                     else
                     {
                         Toast.makeText(getApplicationContext(),"Given room number doesn't exist",Toast.LENGTH_SHORT).show();
-                        finish();
                     }
                 }
                 @Override

@@ -7,6 +7,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
 import model.chess_pieces.AbstractClasses.ChessPiece;
 import view.ChessBoardActivity;
 import model.ChessBoard.ChessBoard;
@@ -23,6 +24,8 @@ public class Controller
     String gameMode;
     String host;
     String gameNumber;
+
+    DatabaseReference roomInfoRef;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,60 +46,9 @@ public class Controller
         {
             this.host=host;
             this.gameNumber=gameNumber;
-            if(host.equals("0"))
-            {
-                internetPlayHost();
-                checkForConnection();
-            }
-            else
-            {
-                internetPlayClient();
-            }
+            roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
+            listenForInfoChange();
         }
-    }
-
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
-    //Initial connection methods
-
-    private void internetPlayHost()
-    {
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
-        myRef.setValue("Active");
-    }
-
-    private void internetPlayClient()
-    {
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
-        myRef.setValue("Connected");
-    }
-
-    private void checkForConnection()
-    {
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumber);
-        myRef.addValueEventListener(new ValueEventListener()
-        {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
-            {
-                String value = dataSnapshot.getValue(String.class);
-                if(value!=null) {
-                    if (value.equals("Connected"))
-                    {
-                        view.playerMove();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
     }
 
     //////////////////////////////////////////////////
@@ -111,19 +63,71 @@ public class Controller
 
     public void askControllerToMakeTurn(int fromRow,int fromCol,int toRow,int toCol,String moveType)
     {
-        String result=model.askModelToMakeTurn(fromRow,fromCol,toRow,toCol,moveType,0);
-        if(gameMode.equals("TwoPlayers"))
+        String result=model.askModelToMakeTurn(fromRow,fromCol,toRow,toCol,moveType);
+        if (result.equals("victory"))
         {
-            if (result.equals("victory"))
-            {
-                view.askViewToDisplayVictory(model.getVictoryTurn());
-            }
-            else
-            {
-                view.askViewToDisplayChessBoard();
-                view.playerMove();
-            }
+            view.askViewToDisplayVictory(model.getVictoryTurn());
         }
+        else
+        {
+            view.askViewToDisplayChessBoard();
+            if(gameMode.equals("TwoPlayers"))
+                view.playerMove();
+        }
+        if(gameMode.equals("InternetPlay"))
+        {
+            roomInfoRef.setValue(host+","+fromRow+","+fromCol+","+toRow+","+toCol+","+moveType);
+        }
+    }
+
+    private void updateGameBoard(String fromRow,String fromCol,String toRow,String toCol,String moveType)
+    {
+        int fromRowChange=Integer.parseInt(fromRow);
+        int fromColChange=Integer.parseInt(fromCol);
+        int toRowChange=Integer.parseInt(toRow);
+        int toColChange=Integer.parseInt(toCol);
+        String result = model.askModelToMakeTurn(fromRowChange,fromColChange,toRowChange,toColChange,moveType);
+        if (result.equals("victory"))
+        {
+            view.askViewToDisplayVictory(model.getVictoryTurn());
+        }
+        else
+        {
+            view.askViewToDisplayChessBoard();
+        }
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //ChessBoard info listener method
+
+    private void listenForInfoChange()
+    {
+        roomInfoRef.addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                String value = dataSnapshot.getValue(String.class);
+                if(value!=null)
+                {
+                    String[] valueSplit=value.split(",",6);
+                    if(!valueSplit[0].equals(host))
+                    {
+                        updateGameBoard(valueSplit[1],valueSplit[2],valueSplit[3],valueSplit[4],valueSplit[5]);
+                        view.playerMove();
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error){}
+        });
     }
 
     //////////////////////////////////////////////////
