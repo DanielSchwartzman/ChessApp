@@ -14,4 +14,4 @@ To start, press "Internet play" on the start menu, then select whether "Host gam
   
 * If you want to join another players game, ask them their room number(which should appear right above their chess board) and insert the number in the "Game number" field, and click "Join game".
 
-**NOTE- Currently, any straying from the game board while playing in "Internet play" will automatically close the session.
+NOTE- Currently, any straying from the game board while playing in "Internet play" will automatically close the session.
