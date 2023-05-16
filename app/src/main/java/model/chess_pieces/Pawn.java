@@ -71,13 +71,23 @@ public class Pawn extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given Pawn threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int lastMoveRow, int lastMoveCol)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int lastMoveRow, int lastMoveCol,int currentOrientation)
     {//calcType: 0=Regular calculation,1=Calculate with regards to king
         threatening=new ArrayList<>();
-        if(allegiance==0)
+        if((currentOrientation==0)&&(allegiance==0))
         {
             calculateUpwards(chessBoard);
             calculateEnPassantUpwards(chessBoard,lastMoveRow,lastMoveCol);
+        }
+        else if((currentOrientation==1)&&(allegiance==1))
+        {
+            calculateUpwards(chessBoard);
+            calculateEnPassantUpwards(chessBoard,lastMoveRow,lastMoveCol);
+        }
+        else if((currentOrientation==0)&&(allegiance==1))
+        {
+            calculateDownwards(chessBoard);
+            calculateEnPassantDownwards(chessBoard,lastMoveRow,lastMoveCol);
         }
         else
         {
@@ -87,9 +97,9 @@ public class Pawn extends SpecialChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
-            removeIllegalEnPassant(chessBoard);
-            removeIllegalMovement(chessBoard);
+            removeIllegalMoves(chessBoard,currentOrientation);
+            removeIllegalEnPassant(chessBoard,currentOrientation);
+            removeIllegalMovement(chessBoard,currentOrientation);
         }
     }
 
@@ -377,7 +387,7 @@ public class Pawn extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Remove illegal moves methods
 
-    private void removeIllegalEnPassant(ChessPiece[][] chessBoard)
+    private void removeIllegalEnPassant(ChessPiece[][] chessBoard, int currentOrientation)
     {
         for (int i = 0; i < enPassant.size(); i++)
         {
@@ -387,7 +397,7 @@ public class Pawn extends SpecialChessPiece
             copy[location.getRow()][location.getCol()]=null;
             copy[location.getRow()][col]=null;
             copy[row][col]=this;
-            calculateRegularMovesForAllEnemies(copy);
+            calculateRegularMovesForAllEnemies(copy,currentOrientation);
             if(isKingThreatened(copy))
             {
                 enPassant.remove(i);
@@ -396,7 +406,7 @@ public class Pawn extends SpecialChessPiece
         }
     }
 
-    private void removeIllegalMovement(ChessPiece[][] chessBoard)
+    private void removeIllegalMovement(ChessPiece[][] chessBoard, int currentOrientation)
     {
         for (int i = 0; i < movement.size(); i++)
         {
@@ -405,7 +415,7 @@ public class Pawn extends SpecialChessPiece
             int col=movement.get(i).getCol();
             copy[location.getRow()][location.getCol()]=null;
             copy[row][col]=this;
-            calculateRegularMovesForAllEnemies(copy);
+            calculateRegularMovesForAllEnemies(copy,currentOrientation);
             if(isKingThreatened(copy))
             {
                 movement.remove(i);

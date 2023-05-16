@@ -1,14 +1,19 @@
-package model.Coordinate;
+package Singleton;
 
-public class Coordinate
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.widget.Toast;
+
+public class SignalGenerator
 {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //Variables
 
-    int row;
-    int col;
+    @SuppressLint("StaticFieldLeak")
+    private static SignalGenerator instance = null;
+    private final Context context;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,12 +23,19 @@ public class Coordinate
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Constructor
+    //Constructor and initializer
 
-    public Coordinate(int row,int col)
+    private SignalGenerator(Context context)
     {
-        this.row=row;
-        this.col=col;
+        this.context = context;
+    }
+
+    public static void init(Context context)
+    {
+        if (instance == null)
+        {
+            instance = new SignalGenerator(context);
+        }
     }
 
     //////////////////////////////////////////////////
@@ -36,26 +48,9 @@ public class Coordinate
     //////////////////////////////////////////////////
     //Getter
 
-    public int getRow()
+    public static SignalGenerator getInstance()
     {
-        return row;
-    }
-    public int getCol() { return col; }
-
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
-    //Setter
-
-    public void setLocation(int row, int col)
-    {
-        this.row=row;
-        this.col=col;
+        return instance;
     }
 
     //////////////////////////////////////////////////
@@ -66,11 +61,11 @@ public class Coordinate
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Equals method
+    //General functions
 
-    public boolean equals(Coordinate toCheck)
+    public void toast(String text)
     {
-        return ((toCheck.getRow()==row)&&(toCheck.getCol()==col));
+        Toast.makeText(context,text,Toast.LENGTH_LONG).show();
     }
 
     //////////////////////////////////////////////////

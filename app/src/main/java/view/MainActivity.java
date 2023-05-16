@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.widget.Button;
 import com.example.chessapp.R;
 
+import Singleton.SignalGenerator;
+
 public class MainActivity extends AppCompatActivity
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,6 +20,8 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initializeButtons();
+
+        SignalGenerator.init(getApplicationContext());
     }
 
     //////////////////////////////////////////////////

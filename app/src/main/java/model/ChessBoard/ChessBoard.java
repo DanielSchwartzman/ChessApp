@@ -13,18 +13,27 @@ import model.chess_pieces.Knight;
 import model.chess_pieces.Pawn;
 import model.chess_pieces.Queen;
 import model.chess_pieces.Rook;
+
 public class ChessBoard
 {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Variables, allegiance: 0=white 1:black
+    //Variables
 
+    //General variables
     ChessPiece[][] chessBoard;
-    int turn;
-    boolean check;
     Coordinate[] lastMove;
-    int[] checkedKingLocation;
+    int[] currentCheckLocation;
+    //0-Whites 1-Blacks
+    int currentTurn;
+
+    //0-Whites are at bottom of the screen
+    //1-Blacks are at bottom of the screen
+    int currentOrientation;
+
+    //Internet play variable
+    String gameMode;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,37 +45,22 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Constructor, allegiance: 0=white 1:black
 
-    public ChessBoard()
+    public ChessBoard(String gameMode,String host)
     {
-        turn = 0;
-        check=true;
-        chessBoard = new ChessPiece[8][8];
+        this.gameMode=gameMode;
+        currentTurn = 0;
+        currentOrientation =0;
 
-        initializeCheckedKing();
+        initializeCurrentCheck();
+        initializeLastMove();
+        initializeChessBoard();
 
-        lastMove=new Coordinate[2];
-        lastMove[0]=new Coordinate(-1,-1);
-        lastMove[1]=new Coordinate(-1,-1);
-
-        initializePieces();
+        if(host!=null)
+            if(host.equals("1"))
+            {
+                flipBoard();
+            }
         calculateMovesForEachPiece();
-    }
-
-    private void initializePieces()
-    {
-        initializePawns();
-        initializeKings();
-        initializeRooks();
-        initializeBishops();
-        initializeKnights();
-        initializeQueens();
-    }
-
-    private void initializeCheckedKing()
-    {
-        checkedKingLocation=new int[2];
-        checkedKingLocation[0]=-1;
-        checkedKingLocation[1]=-1;
     }
 
     //////////////////////////////////////////////////
@@ -79,20 +73,15 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Make a move methods, allegiance: 0=white 1:black
 
-    public String askModelToMakeTurn(int fromRow, int fromCol, int toRow, int toCol,String moveType)
+    public String makeTurn(int fromRow, int fromCol, int toRow, int toCol, String moveType)
     {
-        if(chessBoard[fromRow][fromCol]==null)
-        {
-            return "passed";
-        }
-        String result;
         lastMove[0].setLocation(fromRow,fromCol);
         lastMove[1].setLocation(toRow,toCol);
-        initializeCheckedKing();
+        initializeCurrentCheck();
         movePiece(fromRow,fromCol,toRow,toCol,moveType);
         checkForPromotion(toRow,toCol);
         calculateMovesForEachPiece();
-        result=checkVictory();
+        String result=checkVictory();
         switchCurrentPlayer();
         return result;
     }
@@ -124,7 +113,7 @@ public class ChessBoard
         chessBoard[toRow][toCol]=chessBoard[fromRow][fromCol];
         chessBoard[fromRow][fromCol]=null;
         chessBoard[toRow][toCol].setLocation(toRow,toCol);
-        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol());
+        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol(), currentOrientation);
         if(chessBoard[toRow][toCol] instanceof SpecialChessPiece)
         {
             ((SpecialChessPiece)chessBoard[toRow][toCol]).increaseTimesMoved();
@@ -142,7 +131,7 @@ public class ChessBoard
         chessBoard[fromRow][fromCol]=null;
         chessBoard[toRow][toCol].setLocation(toRow,toCol);
         ((SpecialChessPiece)chessBoard[toRow][toCol]).increaseTimesMoved();
-        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol());
+        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol(), currentOrientation);
     }
 
     private void castling(int fromRow, int fromCol, int toRow, int toCol)
@@ -167,29 +156,70 @@ public class ChessBoard
             chessBoard[fromRow][7]=null;
             ((SpecialChessPiece)chessBoard[fromRow][fromCol+1]).increaseTimesMoved();
         }
-        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol());
+        chessBoard[toRow][toCol].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol(), currentOrientation);
         ((SpecialChessPiece)chessBoard[toRow][toCol]).increaseTimesMoved();
     }
 
     private void checkForPromotion(int row,int col)
     {
-        if((((chessBoard[row][col].getAllegiance()==0)&&(row==0))||((chessBoard[row][col].getAllegiance()==1)&&(row==7)))&&(chessBoard[row][col] instanceof Pawn))
+        if(chessBoard[row][col] instanceof Pawn)
         {
-            Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
-            chessBoard[row][col] = q;
+            if((currentOrientation ==0)&&(chessBoard[row][col].getAllegiance()==0)&&(row==0))
+            {
+                Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
+                chessBoard[row][col] = q;
+            }
+            else if((currentOrientation ==1)&&(chessBoard[row][col].getAllegiance()==1)&&(row==0))
+            {
+                Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
+                chessBoard[row][col] = q;
+            }
+            else if((currentOrientation ==0)&&(chessBoard[row][col].getAllegiance()==1)&&(row==7))
+            {
+                Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
+                chessBoard[row][col] = q;
+            }
+            else if((currentOrientation ==1)&&(chessBoard[row][col].getAllegiance()==0)&&(row==7))
+            {
+                Queen q = new Queen(row, col, chessBoard[row][col].getAllegiance());
+                chessBoard[row][col] = q;
+            }
         }
     }
 
     private void switchCurrentPlayer()
     {
-        if(turn==0)
+        if(currentTurn ==0)
         {
-            turn=1;
+            currentTurn =1;
         }
         else
         {
-            turn=0;
+            currentTurn =0;
         }
+    }
+
+    private void flipBoard()
+    {
+        ChessPiece[][] flippedChessBoard=new ChessPiece[8][8];
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                flippedChessBoard[i][j]=chessBoard[Math.abs(i-7)][Math.abs(j-7)];
+                if(flippedChessBoard[i][j]!=null)
+                    flippedChessBoard[i][j].setLocation(i,j);
+            }
+        }
+        if(currentOrientation ==1)
+        {
+            currentOrientation =0;
+        }
+        else
+        {
+            currentOrientation =1;
+        }
+        chessBoard=flippedChessBoard;
     }
 
     //////////////////////////////////////////////////
@@ -219,9 +249,9 @@ public class ChessBoard
                         col=chessBoard[i][j].getThreatening().get(k).getCol();
                         if(chessBoard[row][col] instanceof King)
                         {
-                            checkedKingLocation[0]=row;
-                            checkedKingLocation[1]=col;
-                            return Check(chessBoard[row][col],chessBoard[i][j]);
+                            currentCheckLocation[0]=row;
+                            currentCheckLocation[1]=col;
+                            return checkIfAnyMovePossibleDespiteCheck(chessBoard[row][col],chessBoard[i][j]);
                         }
                     }
                 }
@@ -230,7 +260,7 @@ public class ChessBoard
         return "passed";
     }
 
-    private String Check(ChessPiece king, ChessPiece attacker)
+    private String checkIfAnyMovePossibleDespiteCheck(ChessPiece king, ChessPiece attacker)
     {
         ArrayList<ChessPiece> piecesThatCanKill= AllWhoThreatenCoordinate(attacker.getLocation(), attacker.getAllegiance());
         Hashtable<Coordinate, ArrayList<ChessPiece> > piecesThatCanBlock=allWhoCanBlockThreatening(king,attacker);
@@ -312,7 +342,6 @@ public class ChessBoard
         }
     }
 
-
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -325,7 +354,7 @@ public class ChessBoard
 
     private boolean canKingMove(ChessPiece king)
     {
-        king.calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol());
+        king.calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol(), currentOrientation);
         return (king.getThreatening().size() > 0);
     }
 
@@ -513,7 +542,7 @@ public class ChessBoard
             {
                 if(chessBoard[i][j]!=null)
                 {
-                    chessBoard[i][j].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol());
+                    chessBoard[i][j].calculateThreatening(chessBoard,1,lastMove[1].getRow(),lastMove[1].getCol(), currentOrientation);
                 }
             }
         }
@@ -528,6 +557,17 @@ public class ChessBoard
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //Initialization methods, allegiance: 0=white 1:black
+
+    private void initializeChessBoard()
+    {
+        chessBoard = new ChessPiece[8][8];
+        initializePawns();
+        initializeKings();
+        initializeRooks();
+        initializeBishops();
+        initializeKnights();
+        initializeQueens();
+    }
 
     private void initializePawns()
     {
@@ -609,6 +649,20 @@ public class ChessBoard
         chessBoard[initializeQueen.getRow()][initializeQueen.getCol()]=initializeQueen;
     }
 
+    private void initializeLastMove()
+    {
+        lastMove=new Coordinate[2];
+        lastMove[0]=new Coordinate(-1,-1);
+        lastMove[1]=new Coordinate(-1,-1);
+    }
+
+    private void initializeCurrentCheck()
+    {
+        currentCheckLocation =new int[2];
+        currentCheckLocation[0]=-1;
+        currentCheckLocation[1]=-1;
+    }
+
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -619,12 +673,12 @@ public class ChessBoard
     //////////////////////////////////////////////////
     //Controller to Model methods
 
-    public boolean askModelIfNotNull(int row, int col)
+    public boolean checkIfCoordinateNotNull(int row, int col)
     {
         return (chessBoard[row][col]!=null);
     }
 
-    public int askModelForImage(int row, int col)
+    public int getImage(int row, int col)
     {
         if(chessBoard[row][col]!=null)
         {
@@ -636,7 +690,7 @@ public class ChessBoard
         }
     }
 
-    public int askModelForSelectedImage(int row, int col)
+    public int getSelectedImage(int row, int col)
     {
         if(chessBoard[row][col]!=null)
         {
@@ -648,7 +702,7 @@ public class ChessBoard
         }
     }
 
-    public int askModelForCheckImage(int row,int col)
+    public int getKingCheckImage(int row, int col)
     {
         if((chessBoard[row][col]!=null)&&(chessBoard[row][col] instanceof King))
         {
@@ -660,19 +714,19 @@ public class ChessBoard
         }
     }
 
-    public boolean askModelIfPieceAllowedToMove(int row, int col)
+    public boolean checkIfPieceAllowedToMove(int row, int col)
     {
-        return (chessBoard[row][col].getAllegiance()==turn);
+        return (chessBoard[row][col].getAllegiance()== currentTurn);
     }
 
-    public ChessPiece askModelForChessPiece(int row, int col)
+    public ChessPiece getChessPiece(int row, int col)
     {
         return chessBoard[row][col];
     }
 
     public int getVictoryTurn()
     {
-        if(turn==1)
+        if(currentTurn ==1)
         {
             return 0;
         }
@@ -682,14 +736,9 @@ public class ChessBoard
         }
     }
 
-    public int[] getCheckedKingLocation()
+    public int[] getCurrentCheckLocation()
     {
-        return checkedKingLocation;
-    }
-
-    public int getTurn()
-    {
-        return turn;
+        return currentCheckLocation;
     }
 
     //////////////////////////////////////////////////

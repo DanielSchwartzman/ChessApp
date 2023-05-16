@@ -59,7 +59,7 @@ public class King extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given King threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2,int orientation)
     { //calcType: 0=Regular calculation,1=Calculate with regards to king
         threatening = new ArrayList<>();
         calculateUpwards(chessBoard);
@@ -73,8 +73,8 @@ public class King extends SpecialChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
-            calculateCastling(chessBoard);
+            removeIllegalMoves(chessBoard,orientation);
+            calculateCastling(chessBoard,orientation);
         }
     }
 
@@ -260,7 +260,7 @@ public class King extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Castling methods
 
-    private void calculateCastling(ChessPiece[][] chessboard)
+    private void calculateCastling(ChessPiece[][] chessboard,int orientation)
     {
         castling=new ArrayList<>();
         if((timesMoved==0)&&(!isKingThreatened(chessboard)))
@@ -268,7 +268,7 @@ public class King extends SpecialChessPiece
             calculateCastlingRight(chessboard);
             calculateCastlingLeft(chessboard);
         }
-        removeIllegalCastling(chessboard);
+        removeIllegalCastling(chessboard,orientation);
     }
 
     private void calculateCastlingLeft(ChessPiece[][] chessBoard)
@@ -342,7 +342,7 @@ public class King extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Remove illegal moves methods
 
-    protected void removeIllegalCastling(ChessPiece[][] chessBoard)
+    protected void removeIllegalCastling(ChessPiece[][] chessBoard,int orientation)
     {
         for (int i = 0; i < castling.size(); i++)
         {
@@ -351,7 +351,7 @@ public class King extends SpecialChessPiece
             int col=castling.get(i).getCol();
             copy[location.getRow()][location.getCol()]=null;
             copy[row][col]=this;
-            calculateRegularMovesForAllEnemies(copy);
+            calculateRegularMovesForAllEnemies(copy,orientation);
             if(isKingThreatened(copy))
             {
                 castling.remove(i);

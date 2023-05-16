@@ -44,7 +44,7 @@ public class Rook extends SpecialChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given Rook threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2,int currentOrientation)
     {//calcType: 0=Regular calculation,1=Calculate with regards to king
         threatening= new ArrayList<>();
         calculateUpwards(chessBoard);
@@ -54,7 +54,7 @@ public class Rook extends SpecialChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
+            removeIllegalMoves(chessBoard,currentOrientation);
         }
     }
 

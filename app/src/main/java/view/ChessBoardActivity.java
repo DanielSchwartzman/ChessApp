@@ -14,6 +14,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+
+import Singleton.SignalGenerator;
 import controller.Controller;
 import model.Coordinate.Coordinate;
 import model.chess_pieces.AbstractClasses.ChessPiece;
@@ -27,13 +29,15 @@ public class ChessBoardActivity extends AppCompatActivity
     //////////////////////////////////////////////////
     //Variables
 
+    //General variables
     ImageView[][] imageViews;
     TextView gameNumberText;
     Controller controller;
     String gameMode;
+
+    //Internet play variables
     String host;
     String gameNumber;
-
     DatabaseReference gameNumberRef;
     DatabaseReference roomInfoRef;
 
@@ -53,16 +57,15 @@ public class ChessBoardActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
-
-        initializeStrings();
+        initializeGameData();
         initializeViewNodes();
+        controller = new Controller(gameMode,gameNumber+"-ChessBoard",host, this);
+        displayChessBoard();
 
-        controller = new Controller(gameMode,gameNumber,host, this);
-        askViewToDisplayChessBoard();
-
+        //Game settings
         if(gameMode.equals("TwoPlayers"))
         {
-            playerMove();
+            startPlayerInteraction();
         }
         else if(gameMode.equals("InternetPlay"))
         {
@@ -89,18 +92,6 @@ public class ChessBoardActivity extends AppCompatActivity
         }
     }
 
-    private void initializeStrings()
-    {
-        gameMode = getIntent().getStringExtra("GameMode");
-        gameNumber = getIntent().getStringExtra("GameNumber");
-        host = getIntent().getStringExtra("Host");
-        if(gameNumber!=null)
-        {
-            gameNumberRef = FirebaseDatabase.getInstance().getReference(gameNumber);
-            roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
-        }
-    }
-
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,57 +100,9 @@ public class ChessBoardActivity extends AppCompatActivity
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Connection methods
+    //Gameplay UI
 
-    private void internetPlayHost()
-    {
-        gameNumberRef.setValue("OnePlayer");
-    }
-
-    private void internetPlayClient()
-    {
-        gameNumberRef.setValue("TwoPlayers");
-        Toast.makeText(getApplicationContext(), "Connected to game", Toast.LENGTH_SHORT).show();
-    }
-
-    private void listenForRoomChanges()
-    {
-        gameNumberRef.addValueEventListener(new ValueEventListener()
-        {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
-            {
-                String value = dataSnapshot.getValue(String.class);
-                if(value==null)
-                {
-                    Toast.makeText(getApplicationContext(), "Game closed", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-                else
-                {
-                    if (value.equals("TwoPlayers")&&host.equals("0"))
-                    {
-                        Toast.makeText(getApplicationContext(), "Opponent connected", Toast.LENGTH_SHORT).show();
-                        playerMove();
-                    }
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
-    }
-
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
-    //Two players game mode
-
-    public void playerMove()
+    public void startPlayerInteraction()
     {
         for (int i = 0; i < 8 ; i++)
         {
@@ -189,13 +132,7 @@ public class ChessBoardActivity extends AppCompatActivity
 
     private void chooseWhereToMove(int fromRow, int fromCol)
     {
-        for (int i = 0; i < 8 ; i++)
-        {
-            for (int j = 0; j < 8 ; j++)
-            {
-                imageViews[i][j].setOnClickListener(view->{});
-            }
-        }
+        disableClicks();
         int image=controller.getPieceSelectedImage(fromRow,fromCol);
         if(image!=0)
         {
@@ -203,21 +140,21 @@ public class ChessBoardActivity extends AppCompatActivity
         }
         imageViews[fromRow][fromCol].setOnClickListener(view ->
         {
-            playerMove();
-            askViewToDisplayChessBoard();
+            displayChessBoard();
+            startPlayerInteraction();
         });
         ChessPiece piece=controller.getChessPiece(fromRow,fromCol);
         if(piece instanceof Pawn)
         {
-            highlightTargetedForPawn(fromRow,fromCol,piece);
+            highlightMovesForPawn(fromRow,fromCol,piece);
         }
         else if(piece instanceof King)
         {
-            highlightTargetedForKing(fromRow,fromCol,piece);
+            highlightMovesForKing(fromRow,fromCol,piece);
         }
         else
         {
-            highlightTargeted(fromRow,fromCol,piece);
+            highlightMovesForGeneralPiece(fromRow,fromCol,piece);
         }
     }
 
@@ -229,9 +166,28 @@ public class ChessBoardActivity extends AppCompatActivity
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Highlight threatened coordinates
+    //Highlight available moves
 
-    private void highlightTargetedForPawn(int fromRow, int fromCol, ChessPiece pawn)
+    private void highlightMovesForGeneralPiece(int fromRow, int fromCol, ChessPiece piece)
+    {
+        for (int i = 0; i < piece.getThreatening().size(); i++)
+        {
+            int toRow=piece.getThreatening().get(i).getRow();
+            int toCol=piece.getThreatening().get(i).getCol();
+            int image=controller.getPieceSelectedImage(toRow,toCol);
+            if(image==0)
+            {
+                imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
+            }
+            imageViews[toRow][toCol].setOnClickListener(view ->
+            {
+                disableClicks();
+                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove");
+            });
+        }
+    }
+
+    private void highlightMovesForPawn(int fromRow, int fromCol, ChessPiece pawn)
     {
         ArrayList<Coordinate> movement=((Pawn)pawn).getMovement();
 
@@ -294,26 +250,7 @@ public class ChessBoardActivity extends AppCompatActivity
         }
     }
 
-    private void highlightTargeted(int fromRow, int fromCol, ChessPiece piece)
-    {
-        for (int i = 0; i < piece.getThreatening().size(); i++)
-        {
-            int toRow=piece.getThreatening().get(i).getRow();
-            int toCol=piece.getThreatening().get(i).getCol();
-            int image=controller.getPieceSelectedImage(toRow,toCol);
-            if(image==0)
-            {
-                imageViews[toRow][toCol].setBackgroundResource(R.drawable.null_targeted);
-            }
-            imageViews[toRow][toCol].setOnClickListener(view ->
-            {
-                disableClicks();
-                controller.askControllerToMakeTurn(fromRow,fromCol,toRow,toCol,"regularMove");
-            });
-        }
-    }
-
-    private void highlightTargetedForKing(int fromRow, int fromCol, ChessPiece piece)
+    private void highlightMovesForKing(int fromRow, int fromCol, ChessPiece piece)
     {
         ArrayList<Coordinate> castling=((King)piece).getCastling();
         for (int i = 0; i < castling.size(); i++)
@@ -352,7 +289,51 @@ public class ChessBoardActivity extends AppCompatActivity
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //Disable clicks
+    //Display methods
+
+    public void displayChessBoard()
+    {
+        for (int i = 0; i < 8 ; i++)
+        {
+            for (int j = 0; j < 8 ; j++)
+            {
+                int image=controller.getPieceImage(i,j);
+                if(image!=0)
+                {
+                    imageViews[i][j].setBackgroundResource(image);
+                }
+                else
+                {
+                    imageViews[i][j].setBackgroundResource(android.R.color.transparent);
+                }
+            }
+        }
+        int[] checkArray=controller.getCheckArray();
+        if(checkArray[0]!=-1 && checkArray[1]!=-1)
+        {
+            int image=controller.getKingCheckedImage(checkArray[0],checkArray[1]);
+            imageViews[checkArray[0]][checkArray[1]].setBackgroundResource(image);
+        }
+    }
+
+    public void displayVictory(int allegiance)
+    {
+        for (int i = 0; i < 8 ; i++)
+        {
+            for (int j = 0; j < 8 ; j++)
+            {
+                imageViews[i][j].setOnClickListener(view->{});
+            }
+        }
+        if(allegiance==0)
+        {
+            SignalGenerator.getInstance().toast("Victory for Whites");
+        }
+        else
+        {
+            SignalGenerator.getInstance().toast("Victory for Blacks");
+        }
+    }
 
     private void disableClicks()
     {
@@ -369,9 +350,60 @@ public class ChessBoardActivity extends AppCompatActivity
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////
-    //initializing view nodes
+    //Connection methods
+
+    private void internetPlayHost()
+    {
+        gameNumberRef.setValue("OnePlayer");
+        SignalGenerator.getInstance().toast("Waiting for opponent to join");
+    }
+
+    private void internetPlayClient()
+    {
+        gameNumberRef.setValue("TwoPlayers");
+        SignalGenerator.getInstance().toast("Connected to game");
+    }
+
+    private void listenForRoomChanges()
+    {
+        gameNumberRef.addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                String value = dataSnapshot.getValue(String.class);
+                if(value==null)
+                {
+                    Toast.makeText(getApplicationContext(), "Game closed", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                else
+                {
+                    if (value.equals("TwoPlayers")&&host.equals("0"))
+                    {
+                        SignalGenerator.getInstance().toast("Opponent connected");
+                        startPlayerInteraction();
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Initialization methods
 
     public void initializeViewNodes()
     {
@@ -388,9 +420,9 @@ public class ChessBoardActivity extends AppCompatActivity
         if(gameNumber!=null)
         {
             gameNumberText=findViewById(R.id.chessBoardGameNumber);
-            gameNumberText.setText(gameNumber);
+            String gameNumberString="Game number: "+gameNumber;
+            gameNumberText.setText(gameNumberString);
         }
-
     }
 
     private void initializeRow0(ImageView[][] imageViews)
@@ -489,57 +521,15 @@ public class ChessBoardActivity extends AppCompatActivity
         imageViews[7][7]=findViewById(R.id.row7col7);
     }
 
-    //////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////
-    //Controller to View methods
-
-    public void askViewToDisplayChessBoard()
+    private void initializeGameData()
     {
-        for (int i = 0; i < 8 ; i++)
+        gameMode = getIntent().getStringExtra("GameMode");
+        gameNumber = getIntent().getStringExtra("GameNumber");
+        host = getIntent().getStringExtra("Host");
+        if(gameNumber!=null)
         {
-            for (int j = 0; j < 8 ; j++)
-            {
-                int image=controller.getPieceImage(i,j);
-                if(image!=0)
-                {
-                    imageViews[i][j].setBackgroundResource(image);
-                }
-                else
-                {
-                    imageViews[i][j].setBackgroundResource(android.R.color.transparent);
-                }
-            }
-        }
-        int[] checkArray=controller.getCheckArray();
-        if(checkArray[0]!=-1 && checkArray[1]!=-1)
-        {
-            int image=controller.getKingCheckedImage(checkArray[0],checkArray[1]);
-            imageViews[checkArray[0]][checkArray[1]].setBackgroundResource(image);
-        }
-    }
-
-    public void askViewToDisplayVictory(int allegiance)
-    {
-        for (int i = 0; i < 8 ; i++)
-        {
-            for (int j = 0; j < 8 ; j++)
-            {
-                imageViews[i][j].setOnClickListener(view->{});
-            }
-        }
-        if(allegiance==0)
-        {
-            Toast.makeText(getApplicationContext(),"Victory for Whites",Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(getApplicationContext(),"Victory for Blacks",Toast.LENGTH_SHORT).show();
+            gameNumberRef = FirebaseDatabase.getInstance().getReference(gameNumber);
+            roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
         }
     }
 

@@ -78,7 +78,7 @@ public abstract class ChessPiece
         return false;
     }
 
-    protected void removeIllegalMoves(ChessPiece[][] chessBoard)
+    protected void removeIllegalMoves(ChessPiece[][] chessBoard,int orientation)
     {
         for (int i = 0; i < threatening.size(); i++)
         {
@@ -87,7 +87,7 @@ public abstract class ChessPiece
             int col=threatening.get(i).getCol();
             copy[location.getRow()][location.getCol()]=null;
             copy[row][col]=this;
-            calculateRegularMovesForAllEnemies(copy);
+            calculateRegularMovesForAllEnemies(copy,orientation);
             if(isKingThreatened(copy))
             {
                 threatening.remove(i);
@@ -96,7 +96,7 @@ public abstract class ChessPiece
         }
     }
 
-    protected void calculateRegularMovesForAllEnemies(ChessPiece[][] chessBoard)
+    protected void calculateRegularMovesForAllEnemies(ChessPiece[][] chessBoard,int orientation)
     {
         for (int i = 0; i < 8 ; i++)
         {
@@ -104,7 +104,7 @@ public abstract class ChessPiece
             {
                 if(chessBoard[i][j]!=null)
                     if(chessBoard[i][j].getAllegiance()!=allegiance)
-                        chessBoard[i][j].calculateThreatening(chessBoard,0,-1,-1);
+                        chessBoard[i][j].calculateThreatening(chessBoard,0,-1,-1,orientation);
             }
         }
     }
@@ -166,7 +166,7 @@ public abstract class ChessPiece
     //////////////////////////////////////////////////
     //Abstract Functions
 
-    public abstract void  calculateThreatening(ChessPiece[][] chessBoard, int calcType, int lastMoveRow,int lastMoveCol);
+    public abstract void  calculateThreatening(ChessPiece[][] chessBoard, int calcType, int lastMoveRow,int lastMoveCol,int currentOrientation);
     public abstract ChessPiece generateCopyChessPiece();
 
     //////////////////////////////////////////////////

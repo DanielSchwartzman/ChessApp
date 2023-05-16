@@ -8,13 +8,13 @@ import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 import com.example.chessapp.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import Singleton.SignalGenerator;
 
 public class InternetPlayActivity extends AppCompatActivity
 {
@@ -24,8 +24,8 @@ public class InternetPlayActivity extends AppCompatActivity
     //Variables
 
     Button hostGame;
-    EditText gameNumberInput;
     Button joinGame;
+    EditText gameNumberInput;
 
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ public class InternetPlayActivity extends AppCompatActivity
 
         if(!isNetworkConnected())
         {
-            Toast.makeText(getApplicationContext(),"No internet Connection",Toast.LENGTH_LONG).show();
+            SignalGenerator.getInstance().toast("No internet Connection");
             finish();
         }
 
@@ -82,11 +82,13 @@ public class InternetPlayActivity extends AppCompatActivity
     {
         hostGame.setOnClickListener(view ->
         {
+            int gameNumber=(int) ((Math.random() * (99999999 - 10000000)) + 10000000);
             Intent hostGame=new Intent(getApplicationContext(), ChessBoardActivity.class);
             hostGame.putExtra("GameMode", "InternetPlay");
-            hostGame.putExtra("GameNumber","1");
+            hostGame.putExtra("GameNumber",gameNumber+"");
             hostGame.putExtra("Host","0");
             startActivity(hostGame);
+            finish();
         });
     }
 
@@ -110,23 +112,20 @@ public class InternetPlayActivity extends AppCompatActivity
                             joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
                             joinGame.putExtra("Host", "1");
                             startActivity(joinGame);
+                            finish();
                         }
                         else if(value.equals("TwoPlayers"))
                         {
-                            Toast.makeText(getApplicationContext(),"Game room is full",Toast.LENGTH_SHORT).show();
+                            SignalGenerator.getInstance().toast("Game room is full");
                         }
                     }
                     else
                     {
-                        Toast.makeText(getApplicationContext(),"Given room number doesn't exist",Toast.LENGTH_SHORT).show();
+                        SignalGenerator.getInstance().toast("Given room number doesn't exist");
                     }
                 }
                 @Override
-                public void onCancelled(@NonNull DatabaseError error)
-                {
-                    Toast.makeText(getApplicationContext(),"Given room number doesn't exist",Toast.LENGTH_SHORT).show();
-                    finish();
-                }
+                public void onCancelled(@NonNull DatabaseError error) {}
             });
         });
     }

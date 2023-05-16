@@ -42,7 +42,7 @@ public class Knight extends ChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given Knight threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2,int orientation)
     {
         threatening=new ArrayList<>();
         calculateUpwards(chessBoard);
@@ -52,7 +52,7 @@ public class Knight extends ChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
+            removeIllegalMoves(chessBoard,orientation);
         }
     }
 

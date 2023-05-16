@@ -19,12 +19,13 @@ public class Controller
     //////////////////////////////////////////////////
     //Variables
 
-    ChessBoard model;
+    //General variables
+    ChessBoard gameBoard;
     ChessBoardActivity view;
+
+    //Internet play variables
     String gameMode;
     String host;
-    String gameNumber;
-
     DatabaseReference roomInfoRef;
 
     //////////////////////////////////////////////////
@@ -37,16 +38,15 @@ public class Controller
     //////////////////////////////////////////////////
     //Constructor
 
-    public Controller(String gameMode,String gameNumber,String host,ChessBoardActivity view)
+    public Controller(String gameMode,String chessBoardName,String host,ChessBoardActivity view)
     {
         this.gameMode=gameMode;
         this.view=view;
-        model=new ChessBoard();
+        gameBoard =new ChessBoard(gameMode,host);
         if(gameMode.equals("InternetPlay"))
         {
             this.host=host;
-            this.gameNumber=gameNumber;
-            roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
+            roomInfoRef = FirebaseDatabase.getInstance().getReference(chessBoardName);
             listenForInfoChange();
         }
     }
@@ -63,38 +63,39 @@ public class Controller
 
     public void askControllerToMakeTurn(int fromRow,int fromCol,int toRow,int toCol,String moveType)
     {
-        String result=model.askModelToMakeTurn(fromRow,fromCol,toRow,toCol,moveType);
-        if (result.equals("victory"))
+        if(gameMode.equals("TwoPlayers"))
         {
-            view.askViewToDisplayVictory(model.getVictoryTurn());
-        }
-        else
-        {
-            view.askViewToDisplayChessBoard();
-            if(gameMode.equals("TwoPlayers"))
-                view.playerMove();
+            sameDeviceMakeTurn(fromRow,fromCol,toRow,toCol,moveType);
         }
         if(gameMode.equals("InternetPlay"))
         {
-            roomInfoRef.setValue(host+","+fromRow+","+fromCol+","+toRow+","+toCol+","+moveType);
+            internetPlayMakeTurn(fromRow,fromCol,toRow,toCol,moveType);
         }
     }
 
-    private void updateGameBoard(String fromRow,String fromCol,String toRow,String toCol,String moveType)
+    private void sameDeviceMakeTurn(int fromRow, int fromCol, int toRow, int toCol, String moveType)
     {
-        int fromRowChange=Integer.parseInt(fromRow);
-        int fromColChange=Integer.parseInt(fromCol);
-        int toRowChange=Integer.parseInt(toRow);
-        int toColChange=Integer.parseInt(toCol);
-        String result = model.askModelToMakeTurn(fromRowChange,fromColChange,toRowChange,toColChange,moveType);
+        String result = gameBoard.makeTurn(fromRow, fromCol, toRow, toCol, moveType);
         if (result.equals("victory"))
         {
-            view.askViewToDisplayVictory(model.getVictoryTurn());
+            view.displayVictory(gameBoard.getVictoryTurn());
         }
         else
         {
-            view.askViewToDisplayChessBoard();
+            view.startPlayerInteraction();
         }
+        view.displayChessBoard();
+    }
+
+    private void internetPlayMakeTurn(int fromRow, int fromCol, int toRow, int toCol, String moveType)
+    {
+        String result= gameBoard.makeTurn(fromRow,fromCol,toRow,toCol,moveType);
+        roomInfoRef.setValue(host+","+Math.abs(fromRow-7)+","+Math.abs(fromCol-7)+","+Math.abs(toRow-7)+","+Math.abs(toCol-7)+","+moveType);
+        if (result.equals("victory"))
+        {
+            view.displayVictory(gameBoard.getVictoryTurn());
+        }
+        view.displayChessBoard();
     }
 
     //////////////////////////////////////////////////
@@ -120,14 +121,32 @@ public class Controller
                     String[] valueSplit=value.split(",",6);
                     if(!valueSplit[0].equals(host))
                     {
-                        updateGameBoard(valueSplit[1],valueSplit[2],valueSplit[3],valueSplit[4],valueSplit[5]);
-                        view.playerMove();
+                        updateGameBoardAccordingToOpponentMove(valueSplit[1],valueSplit[2],valueSplit[3],valueSplit[4],valueSplit[5]);
+                        view.startPlayerInteraction();
                     }
                 }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error){}
         });
+    }
+
+    private void updateGameBoardAccordingToOpponentMove(String fromRow, String fromCol, String toRow, String toCol, String moveType)
+    {
+        int fromRowChange=Integer.parseInt(fromRow);
+        int fromColChange=Integer.parseInt(fromCol);
+        int toRowChange=Integer.parseInt(toRow);
+        int toColChange=Integer.parseInt(toCol);
+        String result = gameBoard.makeTurn(fromRowChange,fromColChange,toRowChange,toColChange,moveType);
+        if (result.equals("victory"))
+        {
+            view.displayChessBoard();
+            view.displayVictory(gameBoard.getVictoryTurn());
+        }
+        else
+        {
+            view.displayChessBoard();
+        }
     }
 
     //////////////////////////////////////////////////
@@ -142,37 +161,37 @@ public class Controller
 
     public boolean checkIfPieceExists(int row, int col)
     {
-        return model.askModelIfNotNull(row,col);
+        return gameBoard.checkIfCoordinateNotNull(row,col);
     }
 
     public int getPieceImage(int row, int col)
     {
-        return model.askModelForImage(row,col);
+        return gameBoard.getImage(row,col);
     }
 
     public int getPieceSelectedImage(int row, int col)
     {
-        return model.askModelForSelectedImage(row,col);
+        return gameBoard.getSelectedImage(row,col);
     }
 
     public int getKingCheckedImage(int row, int col)
     {
-        return model.askModelForCheckImage(row,col);
+        return gameBoard.getKingCheckImage(row,col);
     }
 
     public boolean checkIfPieceAllowedToMove(int row, int col)
     {
-        return model.askModelIfPieceAllowedToMove(row,col);
+        return gameBoard.checkIfPieceAllowedToMove(row,col);
     }
 
     public ChessPiece getChessPiece(int row, int col)
     {
-        return model.askModelForChessPiece(row,col);
+        return gameBoard.getChessPiece(row,col);
     }
 
     public int[] getCheckArray()
     {
-        return model.getCheckedKingLocation();
+        return gameBoard.getCurrentCheckLocation();
     }
 
     //////////////////////////////////////////////////

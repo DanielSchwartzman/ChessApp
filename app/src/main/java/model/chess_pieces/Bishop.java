@@ -42,7 +42,7 @@ public class Bishop extends ChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given Bishop threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2,int orientation)
     {//calcType: 0=Regular calculation,1=Calculate with regards to king
         threatening= new ArrayList<>();
         calculateDiagonalUpRight(chessBoard);
@@ -52,7 +52,7 @@ public class Bishop extends ChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
+            removeIllegalMoves(chessBoard,orientation);
         }
     }
 

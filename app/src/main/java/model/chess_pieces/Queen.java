@@ -42,7 +42,7 @@ public class Queen extends ChessPiece
     //////////////////////////////////////////////////
     //Calculate coordinates which given Queen threatens
 
-    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2)
+    public void calculateThreatening(ChessPiece[][] chessBoard, int calcType,int unUsed, int unUsed2,int currentOrientation)
     {//calcType: 0=Regular calculation,1=Calculate with regards to king
         threatening=new ArrayList<>();
         calculateUpwards(chessBoard);
@@ -56,7 +56,7 @@ public class Queen extends ChessPiece
 
         if(calcType==1)
         {
-            removeIllegalMoves(chessBoard);
+            removeIllegalMoves(chessBoard,currentOrientation);
         }
     }
 
