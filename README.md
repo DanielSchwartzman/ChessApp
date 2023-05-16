@@ -1,5 +1,6 @@
 # About ChessApp:
 ChessApp is a simple Android chess game with options for multiplayer on same device or multiplayer on two separate devices.
+Utilizing google Firebase for the Internet play option, internet connection is MANDATORY for internet play.
 
 ## Two players on same device:
 Allows you to play a game of chess vs another player on a the same device.
