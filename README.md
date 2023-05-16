@@ -1,6 +1,6 @@
 # About ChessApp:
 ChessApp is a simple Android chess game with options for multiplayer on same device or multiplayer on two separate devices.
-Utilizing google Firebase for the Internet play option, internet connection is MANDATORY for internet play.
+Utilizing google Firebase for the Internet play option, internet connection is REQUIRED for internet play.
 
 ## Two players on same device:
 Allows you to play a game of chess vs another player on a the same device.
@@ -8,7 +8,7 @@ To start, simply press "Two players" on the start menu.
 
 ## Internet play:
 Allows you to play a game of chess with another player on another device.
-To start, press "Internet play" on the start menu, then select whether "Host game" or "Join game".
+To start, press "Internet play" on the start menu, then select whether to "Host game" or "Join game".
 
 * If you clicked "Host game", the game enters a standby mode and waits untill another player joins the session, for the second player to connect to your game,
   simply tell the other player to join your game with the Game number that appears right above the playing board.
