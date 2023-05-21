@@ -14,6 +14,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import Singleton.SignalGenerator;
 import controller.Controller;
@@ -32,14 +34,19 @@ public class ChessBoardActivity extends AppCompatActivity
     //General variables
     ImageView[][] imageViews;
     TextView gameNumberText;
+    TextView opponentUserName;
     Controller controller;
     String gameMode;
 
     //Internet play variables
+    Timer timer;
     String host;
     String gameNumber;
+    String userName;
     DatabaseReference gameNumberRef;
     DatabaseReference roomInfoRef;
+    DatabaseReference hostNameRef;
+    DatabaseReference clientNameRef;
 
 
     //////////////////////////////////////////////////
@@ -82,13 +89,16 @@ public class ChessBoardActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause()
+    protected void onDestroy()
     {
-        super.onPause();
-        if((gameNumberRef!=null)&&(roomInfoRef!=null))
+        super.onDestroy();
+        connectionTimerStop();
+        if(gameMode.equals("InternetPlay"))
         {
             gameNumberRef.removeValue();
             roomInfoRef.removeValue();
+            hostNameRef.removeValue();
+            clientNameRef.removeValue();
         }
     }
 
@@ -359,13 +369,17 @@ public class ChessBoardActivity extends AppCompatActivity
     private void internetPlayHost()
     {
         gameNumberRef.setValue("OnePlayer");
+        hostNameRef.setValue(userName);
         SignalGenerator.getInstance().toast("Waiting for opponent to join");
     }
 
     private void internetPlayClient()
     {
         gameNumberRef.setValue("TwoPlayers");
+        clientNameRef.setValue(userName);
+        readHostName();
         SignalGenerator.getInstance().toast("Connected to game");
+        connectionTimerStart();
     }
 
     private void listenForRoomChanges()
@@ -386,6 +400,7 @@ public class ChessBoardActivity extends AppCompatActivity
                     if (value.equals("TwoPlayers")&&host.equals("0"))
                     {
                         SignalGenerator.getInstance().toast("Opponent connected");
+                        readClientName();
                         startPlayerInteraction();
                     }
                 }
@@ -417,9 +432,10 @@ public class ChessBoardActivity extends AppCompatActivity
         initializeRow6(imageViews);
         initializeRow7(imageViews);
 
-        if(gameNumber!=null)
+        if(gameMode.equals("InternetPlay"))
         {
-            gameNumberText=findViewById(R.id.chessBoardGameNumber);
+            opponentUserName=findViewById(R.id.chessBoard_TXTV_opponent);
+            gameNumberText=findViewById(R.id.chessBoard_TXTV_gameNum);
             String gameNumberString="Game number: "+gameNumber;
             gameNumberText.setText(gameNumberString);
         }
@@ -524,12 +540,102 @@ public class ChessBoardActivity extends AppCompatActivity
     private void initializeGameData()
     {
         gameMode = getIntent().getStringExtra("GameMode");
-        gameNumber = getIntent().getStringExtra("GameNumber");
-        host = getIntent().getStringExtra("Host");
-        if(gameNumber!=null)
+        if(gameMode.equals("InternetPlay"))
         {
+            gameNumber = getIntent().getStringExtra("GameNumber");
+            host = getIntent().getStringExtra("Host");
+            userName = getIntent().getStringExtra("UserName");
             gameNumberRef = FirebaseDatabase.getInstance().getReference(gameNumber);
             roomInfoRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ChessBoard");
+            hostNameRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-HostName");
+            clientNameRef = FirebaseDatabase.getInstance().getReference(gameNumber+"-ClientName");
+        }
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Read host name
+
+    public void readHostName()
+    {
+        hostNameRef.addListenerForSingleValueEvent(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot)
+            {
+                String value = snapshot.getValue(String.class);
+                String txt="Opponent: "+value;
+                opponentUserName.setText(txt);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Read client name
+
+    public void readClientName()
+    {
+        clientNameRef.addListenerForSingleValueEvent(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot)
+            {
+                String value = snapshot.getValue(String.class);
+                String txt="Opponent: "+value;
+                opponentUserName.setText(txt);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //Timer methods
+
+    public void connectionTimerStart()
+    {
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                runOnUiThread(() ->
+                {
+                    SignalGenerator.getInstance().toast("Connection timed out");
+                    finish();
+                });
+            }
+        }, (1000*120),0);
+    }
+
+    public void connectionTimerStop()
+    {
+        if(timer!=null)
+        {
+            timer.cancel();
         }
     }
 

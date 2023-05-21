@@ -96,6 +96,7 @@ public class Controller
             view.displayVictory(gameBoard.getVictoryTurn());
         }
         view.displayChessBoard();
+        view.connectionTimerStart();
     }
 
     //////////////////////////////////////////////////
@@ -121,6 +122,7 @@ public class Controller
                     String[] valueSplit=value.split(",",6);
                     if(!valueSplit[0].equals(host))
                     {
+                        view.connectionTimerStop();
                         updateGameBoardAccordingToOpponentMove(valueSplit[1],valueSplit[2],valueSplit[3],valueSplit[4],valueSplit[5]);
                         view.startPlayerInteraction();
                     }

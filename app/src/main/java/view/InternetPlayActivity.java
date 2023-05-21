@@ -2,9 +2,7 @@ package view;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +25,8 @@ public class InternetPlayActivity extends AppCompatActivity
     Button joinGame;
     EditText gameNumberInput;
 
+    String userName;
+
     //////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -44,28 +44,16 @@ public class InternetPlayActivity extends AppCompatActivity
         setContentView(R.layout.activity_internet_play);
         initViews();
 
-        if(!isNetworkConnected())
-        {
-            SignalGenerator.getInstance().toast("No internet Connection");
-            finish();
-        }
-
         hostGameFunctionality();
         joinGameFunctionality();
     }
 
-    private boolean isNetworkConnected()
-    {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
-    }
-
     private void initViews()
     {
-        hostGame=findViewById(R.id.hostGame);
-        gameNumberInput=findViewById(R.id.gameNumber);
-        joinGame=findViewById(R.id.joinGame);
+        userName=getIntent().getStringExtra("UserName");
+        hostGame=findViewById(R.id.internetPlay_BTN_hostGame);
+        gameNumberInput=findViewById(R.id.internetPlay_TXTE_gameNum);
+        joinGame=findViewById(R.id.internetPlay_BTN_joinGame);
     }
 
     //////////////////////////////////////////////////
@@ -84,6 +72,7 @@ public class InternetPlayActivity extends AppCompatActivity
         {
             int gameNumber=(int) ((Math.random() * (99999999 - 10000000)) + 10000000);
             Intent hostGame=new Intent(getApplicationContext(), ChessBoardActivity.class);
+            hostGame.putExtra("UserName",userName);
             hostGame.putExtra("GameMode", "InternetPlay");
             hostGame.putExtra("GameNumber",gameNumber+"");
             hostGame.putExtra("Host","0");
@@ -108,6 +97,7 @@ public class InternetPlayActivity extends AppCompatActivity
                         if(value.equals("OnePlayer"))
                         {
                             Intent joinGame = new Intent(getApplicationContext(), ChessBoardActivity.class);
+                            joinGame.putExtra("UserName",userName);
                             joinGame.putExtra("GameMode", "InternetPlay");
                             joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
                             joinGame.putExtra("Host", "1");

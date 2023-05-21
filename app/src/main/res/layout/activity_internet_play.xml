@@ -8,7 +8,7 @@
     tools:context="view.InternetPlayActivity">
 
     <Button
-        android:id="@+id/hostGame"
+        android:id="@+id/internetPlay_BTN_hostGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="300dp"
@@ -30,14 +30,14 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/hostGame">
+        app:layout_constraintTop_toBottomOf="@+id/internetPlay_BTN_hostGame">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/gameNumberText"
+                android:id="@+id/internetPlay_TXTV_gameNum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
@@ -50,7 +50,7 @@
                 tools:ignore="HardcodedText" />
 
             <EditText
-                android:id="@+id/gameNumber"
+                android:id="@+id/internetPlay_TXTE_gameNum"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginStart="20dp"
@@ -63,14 +63,14 @@
                 android:textAlignment="center"
                 android:textColorHint="@color/white"
                 android:textColor="@color/white"
-                app:layout_constraintBottom_toTopOf="@+id/joinGame"
+                app:layout_constraintBottom_toTopOf="@+id/internetPlay_BTN_joinGame"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/gameNumberText"
+                app:layout_constraintTop_toBottomOf="@+id/internetPlay_TXTV_gameNum"
                 tools:ignore="HardcodedText,LabelFor,VisualLintTextFieldSize" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/joinGame"
+                android:id="@+id/internetPlay_BTN_joinGame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Join game"
@@ -79,7 +79,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/gameNumber"
+                app:layout_constraintTop_toBottomOf="@+id/internetPlay_TXTE_gameNum"
                 tools:ignore="HardcodedText" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
