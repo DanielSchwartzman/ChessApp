@@ -628,7 +628,7 @@ public class ChessBoardActivity extends AppCompatActivity
                     finish();
                 });
             }
-        }, (1000*120),0);
+        }, (1000*120),(1000*120));
     }
 
     public void connectionTimerStop()
