@@ -85,38 +85,47 @@ public class InternetPlayActivity extends AppCompatActivity
     {
         joinGame.setOnClickListener(view ->
         {
-            DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumberInput.getText().toString());
-            myRef.addListenerForSingleValueEvent(new ValueEventListener()
+            String gameNumber=gameNumberInput.getText().toString();
+            if(gameNumber.equals("")||gameNumber.contains(".")||gameNumber.contains(","))
             {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot)
+                SignalGenerator.getInstance().toast("Invalid game number");
+            }
+            else
+            {
+                DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(gameNumberInput.getText().toString());
+                myRef.addListenerForSingleValueEvent(new ValueEventListener()
                 {
-                    String value = snapshot.getValue(String.class);
-                    if(value!=null)
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot)
                     {
-                        if(value.equals("OnePlayer"))
+                        String value = snapshot.getValue(String.class);
+                        if (value != null)
                         {
-                            Intent joinGame = new Intent(getApplicationContext(), ChessBoardActivity.class);
-                            joinGame.putExtra("UserName",userName);
-                            joinGame.putExtra("GameMode", "InternetPlay");
-                            joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
-                            joinGame.putExtra("Host", "1");
-                            startActivity(joinGame);
-                            finish();
+                            if (value.equals("OnePlayer"))
+                            {
+                                Intent joinGame = new Intent(getApplicationContext(), ChessBoardActivity.class);
+                                joinGame.putExtra("UserName", userName);
+                                joinGame.putExtra("GameMode", "InternetPlay");
+                                joinGame.putExtra("GameNumber", gameNumberInput.getText().toString());
+                                joinGame.putExtra("Host", "1");
+                                startActivity(joinGame);
+                                finish();
+                            }
+                            else if (value.equals("TwoPlayers"))
+                            {
+                                SignalGenerator.getInstance().toast("Game room is full");
+                            }
                         }
-                        else if(value.equals("TwoPlayers"))
+                        else
                         {
-                            SignalGenerator.getInstance().toast("Game room is full");
+                            SignalGenerator.getInstance().toast("Given room number doesn't exist");
                         }
                     }
-                    else
-                    {
-                        SignalGenerator.getInstance().toast("Given room number doesn't exist");
-                    }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+            }
         });
     }
 
