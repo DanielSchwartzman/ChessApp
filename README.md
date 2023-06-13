@@ -9,12 +9,6 @@ ChessApp is an engaging mobile application that brings the classic game of chess
 # Game modes:
 ChessApp features two main game modes, "Two players" mode, and "Internet Play" game mode.
 
-Two-Player on Same Device Game Mode:
-Challenge your friends or family members to a thrilling game of chess on a single mobile device. Enjoy the convenience of playing together on the same screen, taking turns to make strategic moves and outwit each other. This mode is perfect for social gatherings, road trips, or any time you want to engage in a face-to-face chess battle.
-
-Internet Play Mode:
-Connect with chess enthusiasts from around the world and showcase your skills in the multiplayer mode. Play against online opponents in real-time matches, test your tactics, and climb the global leaderboard. Challenge players of different skill levels, join tournaments, and participate in ranked matches to improve your ranking and earn achievements.
-
 ## Two players on same device:
 Allows you to play a game of chess vs another player on a the same device.
 To start, simply press "Two players" on the start menu.
