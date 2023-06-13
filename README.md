@@ -6,6 +6,8 @@
 
 ChessApp is an engaging mobile application that brings the classic game of chess to your fingertips. Whether you are a seasoned chess player or a beginner looking to improve your skills, this app offers a comprehensive and user-friendly experience. ChessApp is the ultimate chess companion, combining the timeless game of chess with modern technology. Whether you prefer playing locally with friends or challenging opponents worldwide, this mobile app offers a rich and immersive chess experience for players of all levels. Get ready to exercise your brain, unleash your strategic prowess, and become a chess master!
 
+# Game modes:
+
 ## Two players on same device:
 Allows you to play a game of chess vs another player on a the same device.
 To start, simply press "Two players" on the start menu.
