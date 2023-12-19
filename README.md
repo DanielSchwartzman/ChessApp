@@ -21,3 +21,7 @@ To start, press "Internet play" on the start menu and login to your account(or m
   simply tell the other player to join your game with the Game number that appears right above the playing board.
   
 * If you want to join another players game, ask them their room number(which should appear right above their chess board) and insert the number in the "Game number" field, and click "Join game".
+
+## Authors
+
+- [@DanielSchwartzman](https://github.com/DanielSchwartzman)
