@@ -13,6 +13,10 @@ ChessApp features two main game modes, "Two players" mode, and "Internet Play" g
 Allows you to play a game of chess vs another player on a the same device.
 To start, simply press "Two players" on the start menu.
 
+### Same device demonstration:
+https://github.com/DanielSchwartzman/ChessApp/assets/127026045/6df65c81-44ba-4e79-b778-5631c42f668c
+
+
 ## Internet play:
 Allows you to play a game of chess with another player on another device.
 To start, press "Internet play" on the start menu and login to your account(or make a new one), then select whether to "Host game" or "Join game".
@@ -21,6 +25,10 @@ To start, press "Internet play" on the start menu and login to your account(or m
   simply tell the other player to join your game with the Game number that appears right above the playing board.
   
 * If you want to join another players game, ask them their room number(which should appear right above their chess board) and insert the number in the "Game number" field, and click "Join game".
+
+### Internet play demonstration:
+https://github.com/DanielSchwartzman/ChessApp/assets/127026045/ea64fa50-bfb6-4ca5-b1ef-2c1c5f61fa2e
+
 
 ## Authors
 
