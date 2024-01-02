@@ -4,7 +4,7 @@
   <img src="./app/src/main/res/drawable/icon.png" width="200" height="200">
 </p>
 
-ChessApp is a Chess game application for android devices featuring both multiplayer on one device and multiplayer on two separate devices. Made as a final project for Android Development course in Afeka College of Engineering in Tel-Aviv.
+ChessApp is a Chess game application for android devices featuring both multiplayer on one device and multiplayer on two separate devices. Made as a final project for Android Development course in Afeka College of Engineering Tel-Aviv.
 
 # Game modes:
 ChessApp features two main game modes, "Two players" mode, and "Internet Play" game mode.
